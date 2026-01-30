@@ -1,0 +1,467 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>jmf acu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f0f0f0;
+  color: #000;
+}
+.dark {
+  background: #1c1c1c;
+  color: #fff;
+}
+.container {
+  padding: 16px;
+}
+textarea {
+  width: 100%;
+  height: 180px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+button {
+  padding: 12px 16px;
+  margin: 4px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  background: #007aff;
+  color: white;
+  cursor: pointer;
+}
+button.secondary {
+  background: #555;
+}
+button.danger {
+  background: #b00020;
+}
+.section-title {
+  font-weight: bold;
+  margin-top: 20px;
+  font-size: 20px;
+}
+.output-box {
+  width: 100%;
+  height: 400px;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  white-space: pre-wrap;
+}
+.row {
+  display: flex;
+  flex-wrap: wrap;
+}
+.small-btn {
+  padding: 6px 10px;
+  margin: 3px;
+  font-size: 14px;
+}
+input[type="text"] {
+  border: 1px solid #aaa;
+  border-radius: 6px;
+}
+select {
+  padding: 8px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  margin-right: 6px;
+}
+.notice {
+  font-size: 12px;
+  opacity: 0.7;
+  margin-top: 8px;
+}
+hr { border: none; border-top: 1px solid #ccc; margin: 16px 0; }
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h1>jmf acu</h1>
+<div class="notice">local, hipaa-safe. data stays on this device. (speech-to-text requires internet.)</div>
+
+<button id="toggleTheme" class="secondary">toggle dark / light</button>
+
+<div class="section-title">transcript input</div>
+<textarea id="inputText" placeholder="paste transcript or use microphone..."></textarea>
+
+<button id="startMic">🎤 start dictation</button>
+<button id="stopMic" class="secondary">stop dictation</button>
+<button id="clearInput" class="danger">clear input</button>
+
+<div class="section-title">quick modules</div>
+<div id="moduleButtons"></div>
+<select id="moduleDropdown"></select>
+<button id="insertModule" class="small-btn">insert</button>
+
+<div class="section-title">acupuncture point combos</div>
+<div id="comboButtons"></div>
+<select id="comboDropdown"></select>
+<button id="insertCombo" class="small-btn">insert</button>
+
+<div class="section-title">save custom combo</div>
+<input id="customComboName" type="text" placeholder="combo name" style="width: 48%; padding: 8px;">
+<input id="customComboPoints" type="text" placeholder="points (e.g. LV3, SP6)" style="width: 48%; padding: 8px;">
+<button id="saveCombo">save combo</button>
+
+<div class="section-title">ICD-10 codes</div>
+<select id="icdDropdown"></select>
+<button id="addICD" class="small-btn">add to output</button>
+
+<div class="section-title">generate note</div>
+<button id="generateNote">generate note</button>
+<button id="duplicateLast">duplicate last note</button>
+
+<div class="section-title">output note</div>
+<textarea id="outputText" class="output-box" placeholder="your formatted note will appear here…"></textarea>
+
+<button id="copyNote">copy to clipboard</button>
+<button id="clearOutput" class="danger">clear output</button>
+
+<hr>
+<div class="notice">tip: add this page to your ipad home screen from safari → share → add to home screen.</div>
+
+</div>
+
+<script>
+// dark mode toggle
+document.getElementById("toggleTheme").onclick = function() {
+  document.body.classList.toggle("dark");
+};
+
+// speech recognition (Web Speech API)
+let recognition;
+let autoRestartMic = false;
+
+if ("webkitSpeechRecognition" in window) {
+  recognition = new webkitSpeechRecognition();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
+  recognition.onresult = function(event) {
+    let chunk = "";
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      chunk += event.results[i][0].transcript;
+    }
+    // append into input, keep lowercase (your preference)
+    document.getElementById("inputText").value += " " + chunk.toLowerCase();
+  };
+
+  recognition.onend = function() {
+    if (autoRestartMic) recognition.start();
+  };
+}
+
+document.getElementById("startMic").onclick = function() {
+  if (recognition) {
+    autoRestartMic = true;
+    recognition.start();
+  } else {
+    alert("speech recognition not available in this browser.");
+  }
+};
+
+document.getElementById("stopMic").onclick = function() {
+  if (recognition) {
+    autoRestartMic = false;
+    recognition.stop();
+  }
+};
+
+// clear input
+document.getElementById("clearInput").onclick = function() {
+  document.getElementById("inputText").value = "";
+};
+
+// ICD-10 favorites preload
+const icdList = [
+  "M54.2 cervicalgia",
+  "M25.511 pain in R shoulder",
+  "M25.512 pain in L shoulder",
+  "M79.10 myalgia, unspecified",
+  "M79.11 myalgia of mastication muscle",
+  "M79.12 myalgia of auxiliary muscles, head/neck",
+  "M79.18 myofascial pain",
+  "M54.6 pain in thoracic spine",
+  "M54.50 low back pain, unspecified",
+  "M54.51 vertebrogenic low back pain",
+  "M54.59 other low back pain",
+  "M25.551 pain in R hip",
+  "M25.552 pain in L hip",
+  "M25.561 pain in R knee",
+  "M25.562 pain in L knee",
+  "M25.571 pain in R ankle/foot",
+  "M25.572 pain in L ankle/foot",
+  "G47.00 insomnia, unspecified",
+  "G47.09 other insomnia",
+  "R14.0 abdominal distension",
+  "R14.1 gas pain",
+  "R14.2 eructation",
+  "R14.3 flatulence",
+  "R11.0 nausea",
+  "R11.2 nausea with vomiting",
+  "M25.521 pain in R elbow",
+  "M25.522 pain in L elbow",
+  "G43.909 migraine, unsp, not intractable, w/o status migrainosus",
+  "R51.9 headache, unspecified",
+  "M26.621 R TMJ pain",
+  "M26.622 L TMJ pain",
+  "M26.623 B TMJ pain",
+  "H93.11 tinnitus R",
+  "H93.12 tinnitus L",
+  "H93.13 tinnitus B"
+];
+
+const icdDropdown = document.getElementById("icdDropdown");
+icdList.forEach(code => {
+  const opt = document.createElement("option");
+  opt.value = code;
+  opt.textContent = code;
+  icdDropdown.appendChild(opt);
+});
+
+document.getElementById("addICD").onclick = function() {
+  const code = icdDropdown.value;
+  const out = document.getElementById("outputText");
+  const prefix = out.value.trim().length ? "\n" : "";
+  out.value += prefix + "icd-10: " + code;
+};
+
+// quick modules (you can add more later)
+const modules = {
+  "stress": "general\n– increased stress\n– emotional tension\n",
+  "sleep": "general\n– difficulty falling asleep or staying asleep\n",
+  "knee pain baseline": "B knee\n– pain/tightness\n",
+  "shoulder baseline": "R/L shoulder\n– pain/tightness\n"
+};
+
+const moduleButtons = document.getElementById("moduleButtons");
+const moduleDropdown = document.getElementById("moduleDropdown");
+
+for (const key in modules) {
+  let b = document.createElement("button");
+  b.className = "small-btn";
+  b.textContent = key;
+  b.onclick = function() {
+    document.getElementById("inputText").value += " " + modules[key];
+  };
+  moduleButtons.appendChild(b);
+
+  let opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = key;
+  moduleDropdown.appendChild(opt);
+}
+
+document.getElementById("insertModule").onclick = function() {
+  const val = moduleDropdown.value;
+  document.getElementById("inputText").value += " " + modules[val];
+};
+
+// point combos (buttons + dropdown) with custom saving
+let combos = {
+  "LV3 + LI4": "LV3, LI4",
+  "ST36 + SP6": "ST36, SP6",
+  "GB34 + GB41": "GB34, GB41",
+  "BL40 + KD3": "BL40, KD3",
+  "GV20 + yintang": "GV20, yintang"
+};
+
+const comboButtons = document.getElementById("comboButtons");
+const comboDropdown = document.getElementById("comboDropdown");
+
+function refreshCombos() {
+  comboButtons.innerHTML = "";
+  comboDropdown.innerHTML = "";
+  for (const key in combos) {
+    let b = document.createElement("button");
+    b.className = "small-btn";
+    b.textContent = key;
+    b.onclick = function() {
+      document.getElementById("inputText").value += " " + combos[key];
+    };
+    comboButtons.appendChild(b);
+
+    let opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = key;
+    comboDropdown.appendChild(opt);
+  }
+}
+
+document.getElementById("insertCombo").onclick = function() {
+  const val = comboDropdown.value;
+  document.getElementById("inputText").value += " " + combos[val];
+};
+
+document.getElementById("saveCombo").onclick = function() {
+  let name = document.getElementById("customComboName").value.trim();
+  let pts = document.getElementById("customComboPoints").value.trim();
+  if (!name || !pts) return;
+
+  combos[name] = pts;
+  localStorage.setItem("savedCombos", JSON.stringify(combos));
+  refreshCombos();
+  document.getElementById("customComboName").value = "";
+  document.getElementById("customComboPoints").value = "";
+};
+
+// restore saved combos from local storage (if any)
+const savedCombos = localStorage.getItem("savedCombos");
+if (savedCombos) {
+  try {
+    combos = JSON.parse(savedCombos);
+  } catch (e) {}
+}
+refreshCombos();
+
+// generate the formatted note from transcript
+document.getElementById("generateNote").onclick = function() {
+  const t = (document.getElementById("inputText").value || "").toLowerCase().trim();
+
+  // helper to check if a phrase exists
+  function has(str) {
+    return t.includes(str);
+  }
+
+  // 1) HPI (brief — you can adjust logic later)
+  const hpi = [
+    "hpi:",
+    "– " + (t.slice(0, 180) || "no chief complaint captured")
+  ].join("\n");
+
+  // 2) SUBJECTIVE (headers without bullets; sub-bullets below)
+  const subjSections = [];
+
+  function sectionFromTerms(header, terms) {
+    const lines = [];
+    terms.forEach(term => { if (has(term)) lines.push("– " + term); });
+    if (lines.length) {
+      return header + "\n" + lines.join("\n");
+    }
+    return "";
+  }
+
+  // example parsing; you can expand keywords later
+  const subjRShoulder = sectionFromTerms("R shoulder", ["pain", "tightness", "limited rom", "overhead pain", "outer shoulder"]);
+  const subjLShoulder = sectionFromTerms("L shoulder", ["pain", "tightness", "limited rom", "overhead pain", "outer shoulder"]);
+  const subjRKnee = sectionFromTerms("R knee", ["outer knee pain", "it band tightness", "patellar pain", "running aggravates"]);
+  const subjLKnee = sectionFromTerms("L knee", ["outer knee pain", "it band tightness", "patellar pain"]);
+  const subjBLegs = sectionFromTerms("B lower legs", ["peroneal tightness", "calf tightness", "fatigue", "no swelling"]);
+  const subjGeneral = sectionFromTerms("general", ["heat helps", "running more", "pool closed", "boots/wellies causing fatigue", "icy conditions"]);
+
+  [subjRShoulder, subjLShoulder, subjRKnee, subjLKnee, subjBLegs, subjGeneral]
+    .filter(Boolean).forEach(s => subjSections.push(s));
+
+  const subjective = ["subjective:", subjSections.join("\n") || "general\n– no specific subjective items captured"].join("\n");
+
+  // 3) OBJECTIVE — palpation/tightness only
+  const objSections = [];
+  const objRAdductorHam = sectionFromTerms("R adductor/hamstring", ["tightness", "tenderness", "taut band"]);
+  const objBITB = sectionFromTerms("B it band", ["tightness", "tenderness"]);
+  const objPeroneals = sectionFromTerms("B peroneals", ["tenderness", "tightness"]);
+  const objAchilles = sectionFromTerms("B achilles", ["residual tightness"]);
+  const objGeneral = "general\n– tissues warmer post-treatment\n– releases noted during session\n";
+
+  [objRAdductorHam, objBITB, objPeroneals, objAchilles, objGeneral].filter(Boolean).forEach(s => objSections.push(s));
+  const objective = ["objective:", objSections.join("\n")].join("\n");
+
+  // 4) TONGUE (default unless transcript mentions tongue)
+  let tongue = "tongue:\nnot provided";
+
+  // 5) PULSE (deduce if not supplied)
+  let pulse = "pulse:\ndeduced: wiry with areas of tightness (stagnation) and possible deficiency in SP/KD depending on fatigue.";
+
+  // 6) ASSESSMENT (include TCM dx)
+  const assessment = [
+    "assessment (including tcm diagnosis):",
+    "– biomechanical imbalance with compensation patterns",
+    "– it band/peroneal tightness contributing to lateral knee discomfort",
+    "– progress overall positive with remaining soft-tissue restrictions",
+    "tcm diagnosis:",
+    "– LV qi stagnation affecting sinews",
+    "– qi + blood stagnation along GB/BL pathways",
+    "– SP qi deficiency contributing to fatigue",
+  ].join("\n");
+
+  // 7) TREATMENT PRINCIPLE (TCM)
+  const treatmentPrinciple = [
+    "treatment principle:",
+    "– move LV qi; invigorate blood; open GB/BL channels",
+    "– tonify SP (and KD if indicated) to support muscles",
+    "– warm channels and dispel cold/damp as needed"
+  ].join("\n");
+
+  // 8) ACUPUNCTURE PLAN (interventions only — no dry needling term)
+  const acupuncturePlan = [
+    "acupuncture plan:",
+    "acupuncture",
+    "– channels: LV, SP, GB, BL, ST as indicated; local ashi points",
+    "– motor point/trigger point release where indicated (never using the term ‘dry needling’)",
+    "adjunct therapies",
+    "– infrared: warm channels, move blood, dispel cold",
+    "– cupping: move blood, reduce stagnation",
+    "– guasha: release superficial stagnation, move lymph",
+    "– e-stim: relax sinews, reduce pain, increase circulation",
+    "– crystals (if used): amethyst (calming), citrine (grounding)"
+  ].join("\n");
+
+  // 9) ADVICE
+  const advice = [
+    "advice:",
+    "– home heat application, keep tissues covered in cold weather",
+    "– activity modification and pacing",
+    "– stretching/strengthening as appropriate",
+    "– monitor response and adjust running volume"
+  ].join("\n");
+
+  const output = [
+    hpi, "", subjective, "", objective, "", tongue, "", pulse, "",
+    assessment, "", treatmentPrinciple, "", acupuncturePlan, "", advice
+  ].join("\n");
+
+  document.getElementById("outputText").value = output;
+  localStorage.setItem("lastNote", output);
+};
+
+// duplicate last note
+document.getElementById("duplicateLast").onclick = function() {
+  let last = localStorage.getItem("lastNote");
+  if (last) document.getElementById("outputText").value = last;
+};
+
+// clear output
+document.getElementById("clearOutput").onclick = function() {
+  document.getElementById("outputText").value = "";
+};
+
+// copy to clipboard
+document.getElementById("copyNote").onclick = function() {
+  const out = document.getElementById("outputText");
+  out.focus();
+  out.select();
+  try {
+    document.execCommand("copy");
+  } catch (e) {
+    // fallback modern api
+    navigator.clipboard.writeText(out.value);
+  }
+};
+</script>
+
+</body>
+</html>
