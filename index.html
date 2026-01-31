@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,8 +12,8 @@
   <meta name="theme-color" content="#4F3D5C">
 
   <!-- home‑screen icon (ensure icon-180.png sits next to index.html) -->
-  icon-180.png?v=4
-  icon-180.png?v=4
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=6">
+  <link rel="icon" sizes="180x180" href="icon-180.png?v=6">
 
   <style>
   :root {
@@ -50,7 +49,7 @@
     font-family:var(--font-body); font-weight:300;
     -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
-  .container { padding:16px; max-width:1000px; margin:0 auto; }
+  .container { padding:16px; max-width:1100px; margin:0 auto; }
   .header { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:8px; }
 
   h1, h2, h3, .section-title { font-family:var(--font-heading); font-weight:400; color:var(--text); }
@@ -64,6 +63,7 @@
     border:1px solid var(--border); border-radius:var(--radius);
   }
   textarea.output-box { height:420px; white-space:pre-wrap; }
+
   hr { border:none; border-top:1px solid var(--border); margin:16px 0; }
   .flex-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
   #comboButtons, #moduleButtons, #herbButtons { display:flex; flex-wrap:wrap; gap:6px; }
@@ -97,33 +97,60 @@
     width:100%; max-width:720px; background:var(--card-bg); color:var(--text);
     border:1px solid var(--border); border-radius:16px; padding:16px;
   }
-  .progress-bar {
-    height:10px; width:100%; background:#eee; border-radius:999px; overflow:hidden; margin:8px 0 12px;
-  }
-  .progress-bar > div {
-    height:100%; width:0%; background:var(--accent-green); transition:width .25s ease;
-  }
-  .log {
-    max-height:140px; overflow:auto; background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:13px;
-  }
+  .progress-bar { height:10px; width:100%; background:#eee; border-radius:999px; overflow:hidden; margin:8px 0 12px; }
+  .progress-bar > div { height:100%; width:0%; background:var(--accent-green); transition:width .25s ease; }
+  .log { max-height:140px; overflow:auto; background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:13px; }
 
   /* ===== pass-1 preview panel ===== */
-  .preview {
-    margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:12px; background:#fdfdfd;
-  }
+  .preview { margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:12px; background:#fdfdfd; }
   .preview h3 { margin:0 0 8px; font-size:18px; color:var(--accent); }
-  .preview textarea { height:160px; }
+  .preview textarea { height:160px; white-space:pre-wrap; }
+
+  /* ===== cost meter (card) ===== */
+  .cost-card {
+    display:flex; flex-direction:column; gap:6px;
+    min-width:280px; max-width:420px;
+    background:#fafafa; border:1px solid var(--border); border-radius:12px; padding:10px 12px;
+  }
+  .cost-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .cost-nums { font-size:12px; color:var(--muted); }
+  .cost-strong { font-weight:600; color:var(--text); }
+  .cost-bar { height:8px; width:100%; background:#eee; border-radius:999px; overflow:hidden; }
+  .cost-bar > div { height:100%; width:0%; background:#BADA55; transition:width .25s ease; }
+  .cost-note { font-size:11px; color:var(--muted); }
+  .cost-warn { color:#8a6d3b; }
+  .cost-danger { color:#9c2b2b; }
+  .cost-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:12px; color:var(--muted); }
+  .pill { padding:2px 8px; border-radius:99px; background:#f1f5f9; border:1px solid #e2e8f0; color:#475569; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <div class="header">
-    <button class="brand-btn" aria-label="jmf acu"><span>jmf</span><span>acu</span></button>
-    <div style="flex:1; padding-left:8px;">
-      <h1>jmf acu</h1>
-      <div class="notice">local ui. you control ai usage. (speech requires internet.)</div>
+    <div style="display:flex; align-items:center; gap:12px;">
+      <button class="brand-btn" aria-label="jmf acu"><span>jmf</span><span>acu</span></button>
+      <div>
+        <h1>jmf acu</h1>
+        <div class="notice">local ui. you control ai usage. (speech requires internet.)</div>
+      </div>
     </div>
+
+    <!-- cost meter card -->
+    <div class="cost-card" id="costCard">
+      <div class="cost-header">
+        <div style="font-size:14px; font-weight:600; color:var(--accent);">estimated cost (this month)</div>
+        <div class="cost-nums" id="costCapText">$0 / $15</div>
+      </div>
+      <div class="cost-bar"><div id="costBarFill"></div></div>
+      <div class="cost-row">
+        <span class="pill" id="costDollars">$0.00</span>
+        <span class="pill" id="costTokensIn">in: 0 tok</span>
+        <span class="pill" id="costTokensOut">out: 0 tok</span>
+      </div>
+      <div class="cost-note" id="costNote">defaults assume gpt‑4o‑mini ($0.15 in / $0.60 out per 1m tok). update in ai settings if you switch models.</div>
+    </div>
+
     <div class="flex-row" style="gap:6px;">
       <button id="aiSettingsBtn" class="small-btn">ai settings</button>
       <button id="toggleTheme" class="secondary small" title="toggle dark / light">toggle</button>
@@ -220,7 +247,7 @@
 <div id="aiModalBackdrop" class="modal-backdrop">
   <div class="modal">
     <h2>ai settings</h2>
-    <p class="notice">your key is stored only on this device (localStorage). for a future hipaa‑aligned rollout, we can move this behind an azure proxy so keys never touch the browser.</p>
+    <p class="notice">your key is stored only on this device (localStorage). set a monthly cap here for the in‑app meter (you can also keep a hard cap in the openai dashboard).</p>
 
     <div class="grid">
       <div>
@@ -250,11 +277,26 @@
         <label>temperature</label>
         <input id="aiTemp" type="number" min="0" max="1" step="0.1" value="0.2">
       </div>
+
+      <!-- cost meter config -->
+      <div>
+        <label>monthly cap ($) — in‑app meter</label>
+        <input id="aiCap" type="number" min="0" step="1" value="15">
+      </div>
+      <div>
+        <label>price — input ($ / 1M tokens)</label>
+        <input id="aiPriceIn" type="number" min="0" step="0.01" value="0.15">
+      </div>
+      <div>
+        <label>price — output ($ / 1M tokens)</label>
+        <input id="aiPriceOut" type="number" min="0" step="0.01" value="0.60">
+      </div>
     </div>
 
     <div class="flex-row" style="justify-content:space-between; margin-top:12px;">
-      <span class="notice">tip: copy your key from your provider dashboard and paste here.</span>
-      <div>
+      <span class="notice">tip: set your openai dashboard hard cap too (e.g., $15). this in‑app meter is an estimate for peace of mind.</span>
+      <div class="flex-row" style="gap:6px;">
+        <button id="aiTest" class="small-btn">test ai</button>
         <button id="aiSave" class="small-btn">save</button>
         <button id="aiClose" class="secondary small">close</button>
       </div>
@@ -395,6 +437,64 @@ if (savedCombos) { try { combos = JSON.parse(savedCombos); } catch (e) {} }
 refreshCombos();
 
 /* =========================
+   herbs (patent formulas only)
+========================= */
+let herbFormulas = {
+  "jia wei xiao yao wan":"stress/irritability with heat signs",
+  "xiao yao wan":"lv qi stagnation with sp deficiency",
+  "chai hu shu gan wan":"lv qi stagnation, hypochondriac distention, pain",
+  "shu jin wan":"sinew/blood stasis, pain and stiffness",
+  "du huo ji sheng wan":"chronic wind-cold-damp bi with deficiency",
+  "shen tong zhu yu wan":"blood stasis pain, fixed stabbing pain",
+  "juan bi wan":"wind-cold-damp bi with obstruction",
+  "yu ping feng wan":"wei qi support",
+  "gui pi wan":"sp qi + ht blood deficiency (fatigue, sleep)",
+  "tian wang bu xin dan":"ht/kd yin deficiency insomnia, palpitations",
+  "suan zao ren tang wan":"insomnia due to lv blood/yin deficiency",
+  "ban xia hou po wan":"plum-pit qi (phlegm + qi stagnation)",
+  "bao he wan":"food stagnation",
+  "zuo gui wan":"kd yin deficiency",
+  "you gui wan":"kd yang deficiency"
+};
+const herbButtons = document.getElementById("herbButtons");
+const herbDropdown = document.getElementById("herbDropdown");
+function refreshHerbs() {
+  herbButtons.innerHTML = ""; herbDropdown.innerHTML = "";
+  for (const name in herbFormulas) {
+    const b = document.createElement("button");
+    b.className = "small-btn"; b.textContent = name;
+    b.onclick = () => { addHerbToList(name, herbFormulas[name]); };
+    herbButtons.appendChild(b);
+    const opt = document.createElement("option");
+    opt.value = name; opt.textContent = name; herbDropdown.appendChild(opt);
+  }
+}
+function addHerbToList(name, note) {
+  const key = "currentHerbs"; const existing = localStorage.getItem(key);
+  let arr = []; if (existing) { try { arr = JSON.parse(existing) || []; } catch(e) { arr = []; } }
+  if (!arr.find(h => h.name === name)) {
+    arr.push({ name, note }); localStorage.setItem(key, JSON.stringify(arr));
+  }
+  const input = document.getElementById("inputText");
+  input.value += ` herbal: ${name}${note ? " (" + note + ")" : ""}`;
+}
+document.getElementById("insertHerb").onclick = () => {
+  const name = herbDropdown.value; addHerbToList(name, herbFormulas[name]);
+};
+document.getElementById("saveHerb").onclick = () => {
+  const nm = document.getElementById("customHerbName").value.trim().toLowerCase();
+  const nt = document.getElementById("customHerbNote").value.trim().toLowerCase();
+  if (!nm) return;
+  herbFormulas[nm] = nt || "";
+  localStorage.setItem("savedHerbs", JSON.stringify(herbFormulas));
+  refreshHerbs();
+  document.getElementById("customHerbName").value = ""; document.getElementById("customHerbNote").value = "";
+};
+const savedHerbs2 = localStorage.getItem("savedHerbs");
+if (savedHerbs2) { try { herbFormulas = JSON.parse(savedHerbs2); } catch(e) {} }
+refreshHerbs();
+
+/* =========================
    AI settings (stored locally)
 ========================= */
 const aiDefaults = {
@@ -403,8 +503,14 @@ const aiDefaults = {
   model: "gpt-4o-mini",
   apiKey: "",
   apiVersion: "2024-02-15-preview",
-  temperature: 0.2
+  temperature: 0.2,
+
+  // cost meter defaults (gpt‑4o‑mini)
+  monthlyCap: 15,        // dollars
+  priceIn: 0.15,         // $ per 1M input tokens
+  priceOut: 0.60         // $ per 1M output tokens
 };
+
 function loadAIConfig(){
   const raw = localStorage.getItem("aiConfig");
   if (!raw) return {...aiDefaults};
@@ -413,6 +519,7 @@ function loadAIConfig(){
 function saveAIConfig(cfg){
   localStorage.setItem("aiConfig", JSON.stringify(cfg));
 }
+
 const aiModal = document.getElementById("aiModalBackdrop");
 document.getElementById("aiSettingsBtn").onclick = () => {
   const cfg = loadAIConfig();
@@ -422,6 +529,11 @@ document.getElementById("aiSettingsBtn").onclick = () => {
   document.getElementById("aiKey").value = cfg.apiKey;
   document.getElementById("aiApiVersion").value = cfg.apiVersion;
   document.getElementById("aiTemp").value = cfg.temperature;
+
+  document.getElementById("aiCap").value = cfg.monthlyCap;
+  document.getElementById("aiPriceIn").value = cfg.priceIn;
+  document.getElementById("aiPriceOut").value = cfg.priceOut;
+
   aiModal.style.display = "flex";
 };
 document.getElementById("aiClose").onclick = () => { aiModal.style.display = "none"; };
@@ -432,11 +544,98 @@ document.getElementById("aiSave").onclick = () => {
     model: document.getElementById("aiModel").value.trim() || aiDefaults.model,
     apiKey: document.getElementById("aiKey").value.trim(),
     apiVersion: document.getElementById("aiApiVersion").value.trim() || aiDefaults.apiVersion,
-    temperature: parseFloat(document.getElementById("aiTemp").value) || aiDefaults.temperature
+    temperature: parseFloat(document.getElementById("aiTemp").value) || aiDefaults.temperature,
+
+    monthlyCap: Math.max(0, parseFloat(document.getElementById("aiCap").value) || aiDefaults.monthlyCap),
+    priceIn: Math.max(0, parseFloat(document.getElementById("aiPriceIn").value) || aiDefaults.priceIn),
+    priceOut: Math.max(0, parseFloat(document.getElementById("aiPriceOut").value) || aiDefaults.priceOut)
   };
   saveAIConfig(cfg);
   aiModal.style.display = "none";
+  renderCostUI(); // refresh the visible numbers
 };
+
+/* ===== test AI button (tiny probe) ===== */
+document.getElementById("aiTest").onclick = async () => {
+  const cfg = loadAIConfig();
+  if (!cfg.apiKey){ alert("paste your api key first."); return; }
+  try {
+    await aiChat(cfg, [
+      { role:"system", content:'reply with {"ok":true} only (json).' },
+      { role:"user",   content:"ping" }
+    ]);
+    alert("ai test ok — billing/key look good.");
+  } catch(e){
+    alert("ai test failed: " + (e?.message || e));
+  }
+};
+
+/* =========================
+   cost meter (estimation)
+========================= */
+const METER_KEY = "costMeter";
+function monthKeyNow(){
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
+}
+function loadMeter(){
+  const raw = localStorage.getItem(METER_KEY);
+  const mk = monthKeyNow();
+  let obj = { month: mk, inTok: 0, outTok: 0 };
+  if (raw) { try { obj = JSON.parse(raw) || obj; } catch(e){} }
+  if (obj.month !== mk) obj = { month: mk, inTok: 0, outTok: 0 };
+  return obj;
+}
+function saveMeter(obj){
+  localStorage.setItem(METER_KEY, JSON.stringify(obj));
+}
+function charsToTokens(s){
+  if (!s) return 0;
+  return Math.ceil(s.length / 4);
+}
+function estimateMessagesTokens(messages){
+  let total = 0;
+  (messages||[]).forEach(m => total += charsToTokens(m?.content || ""));
+  return total;
+}
+function addToMeter(deltaInTok, deltaOutTok){
+  const m = loadMeter();
+  m.inTok += Math.max(0, Math.floor(deltaInTok||0));
+  m.outTok += Math.max(0, Math.floor(deltaOutTok||0));
+  saveMeter(m);
+  renderCostUI();
+}
+function currentCost(){
+  const cfg = loadAIConfig();
+  const m = loadMeter();
+  const dollars = (m.inTok/1e6)*cfg.priceIn + (m.outTok/1e6)*cfg.priceOut;
+  return { dollars, inTok: m.inTok, outTok: m.outTok, cap: cfg.monthlyCap, priceIn: cfg.priceIn, priceOut: cfg.priceOut };
+}
+function renderCostUI(){
+  const { dollars, inTok, outTok, cap, priceIn, priceOut } = currentCost();
+  const costCard = document.getElementById("costCard");
+  const capText = document.getElementById("costCapText");
+  const barFill = document.getElementById("costBarFill");
+  const dollarsEl = document.getElementById("costDollars");
+  const inEl = document.getElementById("costTokensIn");
+  const outEl = document.getElementById("costTokensOut");
+  const note = document.getElementById("costNote");
+
+  const pct = cap > 0 ? Math.min(100, Math.round((dollars / cap) * 100)) : 0;
+  barFill.style.width = pct + "%";
+  barFill.style.background = (pct >= 100) ? "#E35D5D" : (pct >= 80 ? "#E3B75D" : "#BADA55");
+  capText.textContent = `$${dollars.toFixed(2)} / $${cap.toFixed(0)}`;
+  dollarsEl.textContent = `$${dollars.toFixed(2)}`;
+  inEl.textContent = `in: ${inTok.toLocaleString()} tok`;
+  outEl.textContent = `out: ${outTok.toLocaleString()} tok`;
+
+  note.textContent = `pricing used: $${priceIn}/1m input, $${priceOut}/1m output (change in ai settings).`;
+
+  const strongWarn = (pct >= 80 && pct < 100);
+  const strongDanger = (pct >= 100);
+  capText.className = strongDanger ? "cost-nums cost-danger" : (strongWarn ? "cost-nums cost-warn" : "cost-nums");
+}
+renderCostUI();
 
 /* =========================
    two‑pass generation
@@ -464,7 +663,6 @@ function logProgress(line){
 }
 function setPct(p){ tpProg.style.width = Math.max(0, Math.min(100, p)) + '%'; }
 
-/* chunk the transcript into overlapping pieces (no deletion) */
 function chunkTranscript(text){
   const chunks = [];
   let i = 0;
@@ -479,10 +677,11 @@ function chunkTranscript(text){
   return chunks.filter(Boolean);
 }
 
-/* unified API caller with backoff; returns message.content text */
 async function aiChat(cfg, messages){
   const base = (cfg.baseUrl || "https://api.openai.com").replace(/\/+$/,"");
   let url, headers, body;
+
+  const reqInTokens = estimateMessagesTokens(messages); // estimate prompt tokens
 
   if (cfg.provider === "azure") {
     url = `${base}/openai/deployments/${encodeURIComponent(cfg.model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion)}`;
@@ -494,15 +693,28 @@ async function aiChat(cfg, messages){
     body = { model: cfg.model || "gpt-4o-mini", temperature: cfg.temperature ?? 0.2, response_format: { type:"json_object" }, messages };
   }
 
+  let lastText = "";
   for (let attempt=1; attempt<=MAX_TRIES; attempt++){
     const resp = await fetch(url, { method:"POST", headers, body: JSON.stringify(body) });
     if (resp.ok){
       const data = await resp.json();
       const content = data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || "";
       if (!content) throw new Error("no content in response");
+
+      const outTok = charsToTokens(content);
+      addToMeter(reqInTokens, outTok); // update cost meter
+
       return content;
     }
-    const txt = await resp.text().catch(()=> "");
+
+    try { lastText = await resp.clone().text(); } catch { lastText = ""; }
+    let ejson = null;
+    try { ejson = JSON.parse(lastText); } catch {}
+
+    if (ejson?.error?.code === "insufficient_quota") {
+      throw new Error("insufficient quota: add a payment method or raise your monthly usage limit in the openai dashboard, then try again.");
+    }
+
     if (resp.status === 429 && attempt < MAX_TRIES){
       await new Promise(r=>setTimeout(r, BACKOFFS[attempt-1]));
       continue;
@@ -510,12 +722,11 @@ async function aiChat(cfg, messages){
     if (resp.status === 401) throw new Error("unauthorized (401): check your api key.");
     if (resp.status === 400) throw new Error("bad request (400): check model name / base url.");
     if (resp.status >= 500) throw new Error("server error: try again in a moment.");
-    throw new Error(`api ${resp.status}: ${txt || "no server message"}`);
+    throw new Error(`api ${resp.status}: ${lastText || "no server message"}`);
   }
   throw new Error("api 429: still rate-limited after retries; wait a minute and try again.");
 }
 
-/* pass‑1: extract facts from a single chunk */
 function pass1System(){
   return [
     "you are a careful tcm-intake extractor for an acupuncture clinic.",
@@ -538,7 +749,6 @@ function pass1System(){
   ].join("\n");
 }
 
-/* pass‑2: final note system prompt */
 function pass2System(){
   return [
     "you are a tcm-savvy clinical scribe for an acupuncture practice.",
@@ -577,7 +787,6 @@ function pass2System(){
   ].join("\n");
 }
 
-/* render final note from pass‑2 json */
 function renderNoteFromJSON(j){
   function bullets(arr){ return (arr||[]).map(s=>"– "+(s||"")).join("\n"); }
   function sections(sec){
@@ -641,7 +850,7 @@ function renderNoteFromJSON(j){
   ].join("\n");
 }
 
-/* two‑pass driver */
+/* ===== two‑pass driver ===== */
 document.getElementById("aiGenerate").onclick = async () => {
   const raw = (document.getElementById("inputText").value || "").trim();
   if (!raw){ alert("paste or dictate a transcript first."); return; }
@@ -649,19 +858,31 @@ document.getElementById("aiGenerate").onclick = async () => {
   const cfg = loadAIConfig();
   if (!cfg.apiKey){ alert("open ai settings → paste your api key."); return; }
 
+  const { dollars, cap } = currentCost();
+  if (cap > 0 && dollars >= cap * 0.8 && dollars < cap) {
+    const ok = confirm(`heads up: you're at ~$${dollars.toFixed(2)} of your $${cap.toFixed(0)} in‑app cap. continue?`);
+    if (!ok) return;
+  }
+  if (cap > 0 && dollars >= cap) {
+    const ok = confirm(`you've reached your in‑app cap ($${cap.toFixed(0)}). continue anyway?`);
+    if (!ok) return;
+  }
+
   try {
-    /* pass 1: chunk + extract */
-    openProgress("pass 1 of 2 — extracting facts…");
-    logProgress("splitting transcript into overlapping chunks…");
+    tpModal.style.display = 'flex';
+    tpStep.textContent = "pass 1 of 2 — extracting facts…";
+    tpProg.style.width = '0%';
+    tpLog.textContent = "splitting transcript into overlapping chunks…";
+
     const chunks = chunkTranscript(raw);
     if (!chunks.length){ throw new Error("no content after chunking."); }
 
     const extList = [];
     for (let i=0; i<chunks.length; i++){
       const pct = Math.round(((i)/Math.max(1,(chunks.length+1))) * 100);
-      setPct(pct);
+      tpProg.style.width = pct + "%";
       tpStep.textContent = `pass 1 — chunk ${i+1} of ${chunks.length}`;
-      logProgress(`processing chunk ${i+1}/${chunks.length}…`);
+      tpLog.textContent += `\nprocessing chunk ${i+1}/${chunks.length}…`;
 
       const sys = pass1System();
       const user = chunks[i];
@@ -680,20 +901,17 @@ document.getElementById("aiGenerate").onclick = async () => {
       extList.push(json);
     }
 
-    /* show pass‑1 preview (human-readable outline) */
     const preview = document.getElementById("pass1Preview");
     const previewBox = document.getElementById("pass1Text");
     const outline = [];
-
     const addLines = (hdr, arr)=>{
       if (arr && arr.length){
         outline.push(hdr + ":");
-        arr.forEach(s => outline.push("– " + s));
+        Array.from(new Set(arr)).forEach(s => outline.push("– " + s));
         outline.push("");
       }
     };
 
-    // simple aggregation for preview only (not used for synthesis)
     const pcAll = [], hpiBitsAll = [], tcmAll = [], icdAll = [], herbsAll = [];
     extList.forEach(e=>{
       (e.personal_context||[]).forEach(s=> pcAll.push(s));
@@ -703,19 +921,18 @@ document.getElementById("aiGenerate").onclick = async () => {
       (e.herb_candidates||[]).forEach(s=> herbsAll.push(s));
     });
 
-    addLines("hpi highlights", Array.from(new Set(hpiBitsAll)));
-    addLines("personal context", Array.from(new Set(pcAll)));
-    addLines("tcm clues", Array.from(new Set(tcmAll)));
-    addLines("icd candidates", Array.from(new Set(icdAll)));
-    addLines("herb candidates", Array.from(new Set(herbsAll)));
+    addLines("hpi highlights", hpiBitsAll);
+    addLines("personal context", pcAll);
+    addLines("tcm clues", tcmAll);
+    addLines("icd candidates", icdAll);
+    addLines("herb candidates", herbsAll);
 
     previewBox.value = outline.join("\n").trim() || "(no preview items extracted)";
     preview.style.display = "block";
 
-    /* pass 2: consolidate into final note */
     tpStep.textContent = "pass 2 of 2 — drafting final note…";
-    setPct(90);
-    logProgress("consolidating all extracts into a single structured note…");
+    tpProg.style.width = "90%";
+    tpLog.textContent += "\nconsolidating all extracts into a single structured note…";
 
     const sys2 = pass2System();
     const user2 = JSON.stringify({ extracts: extList });
@@ -736,12 +953,12 @@ document.getElementById("aiGenerate").onclick = async () => {
     document.getElementById("outputText").value = note;
     localStorage.setItem("lastNote", note);
 
-    setPct(100);
+    tpProg.style.width = "100%";
     tpStep.textContent = "done";
-    logProgress("completed ✔");
+    tpLog.textContent += "\ncompleted ✔";
   } catch (e){
     tpStep.textContent = "error";
-    logProgress("error: " + (e?.message || e));
+    tpLog.textContent += "\nerror: " + (e?.message || e);
   }
 };
 
