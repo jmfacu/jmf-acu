@@ -1,82 +1,112 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
-<!-- apple touch icons for iOS home screen -->
-icon-180.png?v=2
-icon-180.png?v=2
-<meta name="theme-color" content="#4F3D5C">
 <head>
   <meta charset="UTF-8" />
   <title>jmf acu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- iPad/iOS: run as a standalone web app -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="jmf acu">
+  <meta name="theme-color" content="#4F3D5C">
+
+  <!-- ✅ home-screen icon (put icon-180.png in the repo root next to index.html) -->
+  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=2">
+  <link rel="apple-touch-icon" href="icon-180.png?v=2">
 
   <style>
   :root {
+    /* ===== brand colors (light mode) ===== */
     --bg: #ffffff;
-    --text: #444444;
+    --text: #444444;        /* body copy */
     --muted: #666666;
 
     --card-bg: #ffffff;
     --border: #e5e7eb;
 
-    /* primary brand accent = purple */
-    --accent: #4F3D5C;
-    --accent-text: #ffffff;
+    /* primary accent (purple) */
+    --accent: #4F3D5C;      /* buttons, section titles, jmf/acu tile */
+    --accent-text: #ffffff; /* contrast on purple */
 
-    /* brand green for highlights */
-    --accent-green: #BADA55;
+    /* secondary accent (green) for helpful highlights */
+    --accent-green: #BADA55; /* focus rings, small buttons, chips */
 
-    --secondary: #666666;
-    --danger: #4F3D5C;
+    --secondary: #666666;   /* secondary buttons */
+    --danger: #4F3D5C;      /* no red */
 
     --font-heading: "Avenir Next", Avenir, -apple-system, system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-body:    "Avenir Next", Avenir, -apple-system, system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
     --radius: 12px;
   }
+
   .dark {
+    /* ===== brand colors (dark mode) ===== */
     --bg: #121212;
     --text: #e6e6e6;
     --muted: #b3b3b3;
+
     --card-bg: #1b1b1b;
     --border: #2a2a2a;
+
     --accent: #4F3D5C;
     --accent-text: #ffffff;
+
     --secondary: #666666;
     --danger: #4F3D5C;
     --accent-green: #BADA55;
   }
 
+  /* ===== global ===== */
   * { box-sizing: border-box; }
   body {
-    margin: 0; padding: 0;
-    background: var(--bg); color: var(--text);
-    font-family: var(--font-body); font-weight: 300;
-    -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 300; /* avenir light feel */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   .container { padding: 16px; max-width: 1000px; margin: 0 auto; }
 
-  .header { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  /* header row */
+  .header {
+    display: flex; gap: 12px; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
 
-  h1, h2, h3, .section-title { font-family: var(--font-heading); font-weight: 400; color: var(--text); }
+  /* headings */
+  h1, h2, h3, .section-title {
+    font-family: var(--font-heading);
+    font-weight: 400;
+    color: var(--text);
+  }
   h1 { font-size: 28px; margin: 0; text-transform: lowercase; }
 
   /* purple section titles */
   .section-title {
-    font-size: 20px; font-weight: 600; margin-top: 20px; text-transform: lowercase;
+    font-size: 20px;
+    font-weight: 600;
+    margin-top: 20px;
+    text-transform: lowercase;
     color: var(--accent);
   }
 
   .notice { font-size: 12px; color: var(--muted); margin-top: 6px; }
 
+  /* inputs / boxes */
   textarea, input[type="text"], select {
-    width: 100%; padding: 10px; font-size: 16px;
-    background: var(--card-bg); color: var(--text);
-    border: 1px solid var(--border); border-radius: var(--radius);
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    background: var(--card-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
   }
   textarea.output-box { height: 420px; white-space: pre-wrap; }
 
@@ -85,58 +115,75 @@ icon-180.png?v=2
   .flex-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   #comboButtons, #moduleButtons, #herbButtons { display: flex; flex-wrap: wrap; gap: 6px; }
 
-  /* purple primary buttons */
+  /* buttons (primary = purple with white text) */
   button {
-    padding: 12px 16px; margin: 4px 0; border: none; border-radius: var(--radius);
-    font-size: 16px; background: var(--accent); color: var(--accent-text);
-    cursor: pointer; text-transform: lowercase; letter-spacing: 0.2px;
+    padding: 12px 16px;
+    margin: 4px 0;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 16px;
+    background: var(--accent);
+    color: var(--accent-text);
+    cursor: pointer;
+    text-transform: lowercase;
+    letter-spacing: 0.2px;
   }
   button.secondary { background: var(--secondary); color: #ffffff; }
   button.danger    { background: var(--danger);    color: #ffffff; }
 
-  /* small utility buttons = green */
-  .small-btn { padding: 6px 10px; font-size: 14px; background: var(--accent-green); color: #0b1324; }
+  /* small utility buttons (insert/add/save) = green */
+  .small-btn {
+    padding: 6px 10px; font-size: 14px;
+    background: var(--accent-green); color: #0b1324;
+    border-radius: var(--radius);
+  }
 
   button:hover { filter: brightness(0.98); }
   button:active { transform: translateY(1px); }
 
-  /* ✅ green focus cues */
+  /* green focus cues */
   select:focus, textarea:focus, input[type="text"]:focus {
     outline: 2px solid rgba(186, 218, 85, 0.45);
     border-color: var(--accent-green);
   }
 
-  /* brand jmf/acu tile (purple) */
+  /* brand “jmf / acu” tile (purple) */
   .brand-btn {
     display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-    width: 84px; height: 84px; padding: 0; background: var(--accent); color: #ffffff;
-    border-radius: 18px; line-height: 1.05; text-transform: lowercase;
+    width: 84px; height: 84px; padding: 0;
+    background: var(--accent); color: #ffffff; border-radius: 18px;
+    line-height: 1.05; text-transform: lowercase;
     font-family: var(--font-heading); font-weight: 600;
   }
   .brand-btn span { display: block; font-size: 22px; letter-spacing: 0.5px; }
 
-  #toggleTheme.small { padding: 8px 10px; font-size: 14px; border-radius: 10px; }
-
-  /* ✅ green chips (fallback colors – broadly supported) */
+  /* chips (green tint) */
   .chip {
     padding: 6px 10px; border-radius: 999px;
     background: #F3F8DB;         /* light green */
     border: 1px solid #CFE78E;   /* mid green */
     color: var(--text); font-weight: 400;
   }
+
+  /* small toggle */
+  #toggleTheme.small { padding: 8px 10px; font-size: 14px; border-radius: 10px; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <div class="header">
+    <!-- brand button with stacked text -->
     <button class="brand-btn" aria-label="jmf acu">
-      <span>jmf</span><span>acu</span>
+      <span>jmf</span>
+      <span>acu</span>
     </button>
+
     <div style="flex:1; padding-left:8px;">
       <h1>jmf acu</h1>
       <div class="notice">local, hipaa-safe. data stays on this device. (speech-to-text requires internet.)</div>
     </div>
+
     <button id="toggleTheme" class="secondary small" title="toggle dark / light">toggle</button>
   </div>
 
@@ -177,8 +224,8 @@ icon-180.png?v=2
 
   <div class="section-title">save custom patent formula</div>
   <div class="flex-row">
-    <input id="customHerbName" type="text" placeholder="formula name (e.g. jia wei xiao yao wan)" style="flex: 1;">
-    <input id="customHerbNote" type="text" placeholder="brief note/indication (optional)" style="flex: 1;">
+    <input id="customHerbName" type="text" placeholder="formula name (e.g. jia wei xiao yao wan)" style="flex: 1%;">
+    <input id="customHerbNote" type="text" placeholder="brief note/indication (optional)" style="flex: 1%;">
     <button id="saveHerb" class="small-btn">save formula</button>
   </div>
 
@@ -203,15 +250,20 @@ icon-180.png?v=2
 </div>
 
 <script>
+/* ========== theme toggle ========== */
 document.getElementById("toggleTheme").onclick = function() {
   document.body.classList.toggle("dark");
 };
 
-/* speech recognition: final results only */
-let recognition, autoRestartMic = false;
+/* ========== speech recognition (final results only; no repeats) ========== */
+let recognition;
+let autoRestartMic = false;
+
 if ("webkitSpeechRecognition" in window) {
   recognition = new webkitSpeechRecognition();
-  recognition.continuous = true; recognition.interimResults = true;
+  recognition.continuous = true;
+  recognition.interimResults = true;
+
   recognition.onresult = function(event) {
     let finalText = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -222,195 +274,306 @@ if ("webkitSpeechRecognition" in window) {
       input.value += (input.value ? " " : "") + finalText.toLowerCase();
     }
   };
-  recognition.onend = function() { if (autoRestartMic) recognition.start(); };
+
+  recognition.onend = function() {
+    if (autoRestartMic) recognition.start();
+  };
 }
+
 document.getElementById("startMic").onclick = function() {
-  if (recognition) { autoRestartMic = true; recognition.start(); }
-  else { alert("speech recognition not available in this browser."); }
-};
-document.getElementById("stopMic").onclick = function() {
-  if (recognition) { autoRestartMic = false; recognition.stop(); }
+  if (recognition) {
+    autoRestartMic = true;
+    recognition.start();
+  } else {
+    alert("speech recognition not available in this browser.");
+  }
 };
 
+document.getElementById("stopMic").onclick = function() {
+  if (recognition) {
+    autoRestartMic = false;
+    recognition.stop();
+  }
+};
+
+/* ========== input controls ========== */
 document.getElementById("clearInput").onclick = function() {
   document.getElementById("inputText").value = "";
 };
 
-/* ICD-10 list */
+/* ========== icd-10 favorites preload ========== */
 const icdList = [
-  "M54.2 cervicalgia","M25.511 pain in R shoulder","M25.512 pain in L shoulder",
-  "M79.10 myalgia, unspecified","M79.11 myalgia of mastication muscle","M79.12 myalgia of auxiliary muscles, head/neck","M79.18 myofascial pain",
-  "M54.6 pain in thoracic spine","M54.50 low back pain, unspecified","M54.51 vertebrogenic low back pain","M54.59 other low back pain",
-  "M25.551 pain in R hip","M25.552 pain in L hip","M25.561 pain in R knee","M25.562 pain in L knee",
-  "M25.571 pain in R ankle/foot","M25.572 pain in L ankle/foot",
-  "G47.00 insomnia, unspecified","G47.09 other insomnia",
-  "R14.0 abdominal distension","R14.1 gas pain","R14.2 eructation","R14.3 flatulence",
-  "R11.0 nausea","R11.2 nausea with vomiting",
-  "M25.521 pain in R elbow","M25.522 pain in L elbow",
+  "M54.2 cervicalgia",
+  "M25.511 pain in R shoulder",
+  "M25.512 pain in L shoulder",
+  "M79.10 myalgia, unspecified",
+  "M79.11 myalgia of mastication muscle",
+  "M79.12 myalgia of auxiliary muscles, head/neck",
+  "M79.18 myofascial pain",
+  "M54.6 pain in thoracic spine",
+  "M54.50 low back pain, unspecified",
+  "M54.51 vertebrogenic low back pain",
+  "M54.59 other low back pain",
+  "M25.551 pain in R hip",
+  "M25.552 pain in L hip",
+  "M25.561 pain in R knee",
+  "M25.562 pain in L knee",
+  "M25.571 pain in R ankle/foot",
+  "M25.572 pain in L ankle/foot",
+  "G47.00 insomnia, unspecified",
+  "G47.09 other insomnia",
+  "R14.0 abdominal distension",
+  "R14.1 gas pain",
+  "R14.2 eructation",
+  "R14.3 flatulence",
+  "R11.0 nausea",
+  "R11.2 nausea with vomiting",
+  "M25.521 pain in R elbow",
+  "M25.522 pain in L elbow",
   "G43.909 migraine, unsp, not intractable, w/o status migrainosus",
   "R51.9 headache, unspecified",
-  "M26.621 R TMJ pain","M26.622 L TMJ pain","M26.623 B TMJ pain",
-  "H93.11 tinnitus R","H93.12 tinnitus L","H93.13 tinnitus B"
+  "M26.621 R TMJ pain",
+  "M26.622 L TMJ pain",
+  "M26.623 B TMJ pain",
+  "H93.11 tinnitus R",
+  "H93.12 tinnitus L",
+  "H93.13 tinnitus B"
 ];
+
 const icdDropdown = document.getElementById("icdDropdown");
 icdList.forEach(code => {
   const opt = document.createElement("option");
-  opt.value = code; opt.textContent = code; icdDropdown.appendChild(opt);
+  opt.value = code;
+  opt.textContent = code;
+  icdDropdown.appendChild(opt);
 });
+
 document.getElementById("addICD").onclick = function() {
-  const code = icdDropdown.value, out = document.getElementById("outputText");
-  out.value += (out.value.trim().length ? "\n" : "") + "icd-10: " + code.toLowerCase();
+  const code = icdDropdown.value;
+  const out = document.getElementById("outputText");
+  const prefix = out.value.trim().length ? "\n" : "";
+  out.value += prefix + "icd-10: " + code.toLowerCase();
 };
 
-/* quick modules */
+/* ========== quick modules ========== */
 const modules = {
   "stress": "general\n– increased stress\n– emotional tension\n",
   "sleep": "general\n– difficulty falling asleep or staying asleep\n",
   "knee pain baseline": "B knee\n– pain/tightness\n",
   "shoulder baseline": "R/L shoulder\n– pain/tightness\n"
 };
+
 const moduleButtons = document.getElementById("moduleButtons");
 const moduleDropdown = document.getElementById("moduleDropdown");
+
 for (const key in modules) {
   let b = document.createElement("button");
-  b.className = "small-btn"; b.textContent = key;
-  b.onclick = () => { document.getElementById("inputText").value += " " + modules[key]; };
+  b.className = "small-btn";
+  b.textContent = key;
+  b.onclick = function() {
+    document.getElementById("inputText").value += " " + modules[key];
+  };
   moduleButtons.appendChild(b);
+
   let opt = document.createElement("option");
-  opt.value = key; opt.textContent = key; moduleDropdown.appendChild(opt);
+  opt.value = key;
+  opt.textContent = key;
+  moduleDropdown.appendChild(opt);
 }
-document.getElementById("insertModule").onclick = () => {
+
+document.getElementById("insertModule").onclick = function() {
   const val = moduleDropdown.value;
   document.getElementById("inputText").value += " " + modules[val];
 };
 
-/* combos with custom saving */
+/* ========== point combos (buttons + dropdown) with custom saving ========== */
 let combos = {
-  "LV3 + LI4": "LV3, LI4","ST36 + SP6":"ST36, SP6",
-  "GB34 + GB41":"GB34, GB41","BL40 + KD3":"BL40, KD3","GV20 + yintang":"GV20, yintang"
+  "LV3 + LI4": "LV3, LI4",
+  "ST36 + SP6": "ST36, SP6",
+  "GB34 + GB41": "GB34, GB41",
+  "BL40 + KD3": "BL40, KD3",
+  "GV20 + yintang": "GV20, yintang"
 };
+
 const comboButtons = document.getElementById("comboButtons");
 const comboDropdown = document.getElementById("comboDropdown");
+
 function refreshCombos() {
-  comboButtons.innerHTML = ""; comboDropdown.innerHTML = "";
+  comboButtons.innerHTML = "";
+  comboDropdown.innerHTML = "";
   for (const key in combos) {
     let b = document.createElement("button");
-    b.className = "small-btn"; b.textContent = key;
-    b.onclick = () => { document.getElementById("inputText").value += " " + combos[key]; };
+    b.className = "small-btn";
+    b.textContent = key;
+    b.onclick = function() {
+      document.getElementById("inputText").value += " " + combos[key];
+    };
     comboButtons.appendChild(b);
+
     let opt = document.createElement("option");
-    opt.value = key; opt.textContent = key; comboDropdown.appendChild(opt);
+    opt.value = key;
+    opt.textContent = key;
+    comboDropdown.appendChild(opt);
   }
 }
-document.getElementById("insertCombo").onclick = () => {
+
+document.getElementById("insertCombo").onclick = function() {
   const val = comboDropdown.value;
   document.getElementById("inputText").value += " " + combos[val];
 };
-document.getElementById("saveCombo").onclick = () => {
+
+document.getElementById("saveCombo").onclick = function() {
   let name = document.getElementById("customComboName").value.trim();
   let pts = document.getElementById("customComboPoints").value.trim();
   if (!name || !pts) return;
-  combos[name] = pts; localStorage.setItem("savedCombos", JSON.stringify(combos));
-  refreshCombos(); document.getElementById("customComboName").value = ""; document.getElementById("customComboPoints").value = "";
+  combos[name] = pts;
+  localStorage.setItem("savedCombos", JSON.stringify(combos));
+  refreshCombos();
+  document.getElementById("customComboName").value = "";
+  document.getElementById("customComboPoints").value = "";
 };
+
+// restore saved combos
 const savedCombos = localStorage.getItem("savedCombos");
-if (savedCombos) { try { combos = JSON.parse(savedCombos); } catch {} }
+if (savedCombos) {
+  try { combos = JSON.parse(savedCombos); } catch (e) {}
+}
 refreshCombos();
 
-/* herbs (patent formulas) */
+/* ========== herbal recommendations (patent formulas) ========== */
 let herbFormulas = {
-  "jia wei xiao yao wan":"stress/irritability with heat signs",
-  "xiao yao wan":"LV qi stagnation with SP deficiency",
-  "chai hu shu gan wan":"LV qi stagnation, hypochondriac distention, pain",
-  "shu jin wan":"sinew/blood stasis, pain and stiffness",
-  "du huo ji sheng wan":"chronic wind-cold-damp bi with deficiency",
-  "shen tong zhu yu wan":"blood stasis pain, fixed stabbing pain",
-  "juan bi wan":"wind-cold-damp bi with obstruction",
-  "yu ping feng wan":"wei qi support",
-  "gui pi wan":"SP qi + HT blood deficiency (fatigue, sleep)",
-  "tian wang bu xin dan":"HT/KD yin deficiency insomnia, palpitations",
-  "suan zao ren tang wan":"insomnia due to LV blood/yin deficiency",
-  "ban xia hou po wan":"plum-pit qi (phlegm + qi stagnation)",
-  "bao he wan":"food stagnation",
-  "zuo gui wan":"KD yin deficiency",
-  "you gui wan":"KD yang deficiency"
+  "jia wei xiao yao wan": "stress/irritability with heat signs",
+  "xiao yao wan": "LV qi stagnation with SP deficiency",
+  "chai hu shu gan wan": "LV qi stagnation, hypochondriac distention, pain",
+  "shu jin wan": "sinew/blood stasis, pain and stiffness",
+  "du huo ji sheng wan": "chronic wind-cold-damp bi with deficiency",
+  "shen tong zhu yu wan": "blood stasis pain, fixed stabbing pain",
+  "juan bi wan": "wind-cold-damp bi with obstruction",
+  "yu ping feng wan": "wei qi support",
+  "gui pi wan": "SP qi + HT blood deficiency (fatigue, sleep)",
+  "tian wang bu xin dan": "HT/KD yin deficiency insomnia, palpitations",
+  "suan zao ren tang wan": "insomnia due to LV blood/yin deficiency",
+  "ban xia hou po wan": "plum-pit qi (phlegm + qi stagnation)",
+  "bao he wan": "food stagnation",
+  "zuo gui wan": "KD yin deficiency",
+  "you gui wan": "KD yang deficiency"
 };
+
 const herbButtons = document.getElementById("herbButtons");
 const herbDropdown = document.getElementById("herbDropdown");
+
 function refreshHerbs() {
-  herbButtons.innerHTML = ""; herbDropdown.innerHTML = "";
+  herbButtons.innerHTML = "";
+  herbDropdown.innerHTML = "";
   for (const name in herbFormulas) {
     const b = document.createElement("button");
-    b.className = "small-btn"; b.textContent = name;
-    b.onclick = () => { addHerbToList(name, herbFormulas[name]); };
+    b.className = "small-btn";
+    b.textContent = name;
+    b.onclick = function() { addHerbToList(name, herbFormulas[name]); };
     herbButtons.appendChild(b);
+
     const opt = document.createElement("option");
-    opt.value = name; opt.textContent = name; herbDropdown.appendChild(opt);
+    opt.value = name;
+    opt.textContent = name;
+    herbDropdown.appendChild(opt);
   }
 }
+
 function addHerbToList(name, note) {
-  const key = "currentHerbs"; const existing = localStorage.getItem(key);
-  let arr = []; if (existing) { try { arr = JSON.parse(existing) || []; } catch { arr = []; } }
-  if (!arr.find(h => h.name === name)) { arr.push({ name, note }); localStorage.setItem(key, JSON.stringify(arr)); }
+  const key = "currentHerbs";
+  const existing = localStorage.getItem(key);
+  let arr = [];
+  if (existing) { try { arr = JSON.parse(existing) || []; } catch (e) { arr = []; } }
+  if (!arr.find(h => h.name === name)) {
+    arr.push({ name, note });
+    localStorage.setItem(key, JSON.stringify(arr));
+  }
   const input = document.getElementById("inputText");
   input.value += ` herbal: ${name}${note ? " (" + note + ")" : ""}`;
 }
-document.getElementById("insertHerb").onclick = () => {
-  const name = herbDropdown.value; addHerbToList(name, herbFormulas[name]);
+
+document.getElementById("insertHerb").onclick = function() {
+  const name = herbDropdown.value;
+  addHerbToList(name, herbFormulas[name]);
 };
-document.getElementById("saveHerb").onclick = () => {
+
+document.getElementById("saveHerb").onclick = function() {
   const nm = document.getElementById("customHerbName").value.trim().toLowerCase();
   const nt = document.getElementById("customHerbNote").value.trim().toLowerCase();
-  if (!nm) return; herbFormulas[nm] = nt || "";
-  localStorage.setItem("savedHerbs", JSON.stringify(herbFormulas)); refreshHerbs();
-  document.getElementById("customHerbName").value = ""; document.getElementById("customHerbNote").value = "";
+  if (!nm) return;
+  herbFormulas[nm] = nt || "";
+  localStorage.setItem("savedHerbs", JSON.stringify(herbFormulas));
+  refreshHerbs();
+  document.getElementById("customHerbName").value = "";
+  document.getElementById("customHerbNote").value = "";
 };
+
+// restore saved custom herbs
 const savedHerbs = localStorage.getItem("savedHerbs");
-if (savedHerbs) { try { herbFormulas = JSON.parse(savedHerbs); } catch {} }
+if (savedHerbs) { try { herbFormulas = JSON.parse(savedHerbs); } catch (e) {} }
 refreshHerbs();
 
-/* generate formatted note (unchanged logic) */
+/* ========== generate formatted note ========== */
 document.getElementById("generateNote").onclick = function() {
   const t = (document.getElementById("inputText").value || "").toLowerCase().trim();
-  function has(str){ return t.includes(str); }
+
+  function has(str) { return t.includes(str); }
+
+  /* extract dictated points (lv3, li4, etc.) */
   const pointRegex = /\b(lv|sp|gb|bl|ht|pc|kd|lu|st|si|li|cv|gv)\s*([0-9]{1,2})\b/gi;
   let match, pointsFound = new Set();
   while ((match = pointRegex.exec(t)) !== null) {
-    const ch = (match[1]||"").toUpperCase(), num = match[2]||"";
+    const ch = (match[1] || "").toUpperCase();
+    const num = match[2] || "";
     pointsFound.add(ch + num);
   }
   if (has("yintang")) pointsFound.add("yintang");
   if (has("taiyang")) pointsFound.add("taiyang");
 
-  const hpi = ["hpi:","– " + (t.slice(0,180)||"no chief complaint captured")].join("\n");
+  /* hpi */
+  const hpi = [
+    "hpi:",
+    "– " + (t.slice(0, 180) || "no chief complaint captured")
+  ].join("\n");
 
+  /* subjective */
   const subjSections = [];
-  function sectionFromTerms(header, terms){
-    const lines=[]; terms.forEach(term=>{ if(has(term)) lines.push("– "+term); });
-    return lines.length ? header+"\n"+lines.join("\n") : "";
+  function sectionFromTerms(header, terms) {
+    const lines = [];
+    terms.forEach(term => { if (has(term)) lines.push("– " + term); });
+    if (lines.length) return header + "\n" + lines.join("\n");
+    return "";
   }
-  const subjRShoulder=sectionFromTerms("R shoulder",["shoulder","upper trap","overhead","tightness","pain"]);
-  const subjLShoulder=sectionFromTerms("L shoulder",["left shoulder","upper trap","overhead","tightness","pain"]);
-  const subjRKnee=sectionFromTerms("R knee",["outer knee","it band","patellar","running"]);
-  const subjLKnee=sectionFromTerms("L knee",["outer knee","it band","patellar"]);
-  const subjBLegs=sectionFromTerms("B lower legs",["peroneal","calf","fatigue","no swelling"]);
-  const subjGeneral=sectionFromTerms("general",["heat helps","pool closed","running more","snow boots","icy"]);
-  [subjRShoulder,subjLShoulder,subjRKnee,subjLKnee,subjBLegs,subjGeneral].filter(Boolean).forEach(s=>subjSections.push(s));
-  const subjective=["subjective:", subjSections.join("\n") || "general\n– no specific subjective items captured"].join("\n");
+  const subjRShoulder = sectionFromTerms("R shoulder", ["shoulder", "upper trap", "overhead", "tightness", "pain"]);
+  const subjLShoulder = sectionFromTerms("L shoulder", ["left shoulder", "upper trap", "overhead", "tightness", "pain"]);
+  const subjRKnee = sectionFromTerms("R knee", ["outer knee", "it band", "patellar", "running"]);
+  const subjLKnee = sectionFromTerms("L knee", ["outer knee", "it band", "patellar"]);
+  const subjBLegs = sectionFromTerms("B lower legs", ["peroneal", "calf", "fatigue", "no swelling"]);
+  const subjGeneral = sectionFromTerms("general", ["heat helps", "pool closed", "running more", "snow boots", "icy"]);
 
-  const objSections=[]; 
-  const objRAdductorHam=sectionFromTerms("R adductor/hamstring",["tightness","tenderness","taut band"]);
-  const objBITB=sectionFromTerms("B it band",["tightness","tenderness"]);
-  const objPeroneals=sectionFromTerms("B peroneals",["tenderness","tightness"]);
-  const objAchilles=sectionFromTerms("B achilles",["residual tightness"]);
-  const objGeneral="general\n– tissues warmer post-treatment\n– releases noted during session\n";
-  [objRAdductorHam,objBITB,objPeroneals,objAchilles,objGeneral].filter(Boolean).forEach(s=>objSections.push(s));
-  const objective=["objective:", objSections.join("\n")].join("\n");
+  [subjRShoulder, subjLShoulder, subjRKnee, subjLKnee, subjBLegs, subjGeneral]
+    .filter(Boolean).forEach(s => subjSections.push(s));
 
-  let tongue="tongue:\nnot provided";
-  let pulse="pulse:\ndeduced: wiry where there is stagnation; possible deficiency in SP/KD with fatigue findings.";
+  const subjective = ["subjective:", subjSections.join("\n") || "general\n– no specific subjective items captured"].join("\n");
 
-  const assessment=[
+  /* objective — palpation/tightness only */
+  const objSections = [];
+  const objRAdductorHam = sectionFromTerms("R adductor/hamstring", ["tightness", "tenderness", "taut band"]);
+  const objBITB = sectionFromTerms("B it band", ["tightness", "tenderness"]);
+  const objPeroneals = sectionFromTerms("B peroneals", ["tenderness", "tightness"]);
+  const objAchilles = sectionFromTerms("B achilles", ["residual tightness"]);
+  const objGeneral = "general\n– tissues warmer post-treatment\n– releases noted during session\n";
+  [objRAdductorHam, objBITB, objPeroneals, objAchilles, objGeneral].filter(Boolean).forEach(s => objSections.push(s));
+  const objective = ["objective:", objSections.join("\n")].join("\n");
+
+  /* tongue */
+  let tongue = "tongue:\nnot provided";
+
+  /* pulse — deduced if not supplied */
+  let pulse = "pulse:\ndeduced: wiry where there is stagnation; possible deficiency in SP/KD with fatigue findings.";
+
+  /* assessment with tcm dx */
+  const assessment = [
     "assessment (including tcm diagnosis):",
     "– biomechanical imbalance with compensation patterns",
     "– it band/peroneal tightness contributing to lateral knee discomfort",
@@ -421,19 +584,22 @@ document.getElementById("generateNote").onclick = function() {
     "– SP qi deficiency contributing to fatigue"
   ].join("\n");
 
-  const treatmentPrinciple=[
+  /* treatment principle */
+  const treatmentPrinciple = [
     "treatment principle:",
     "– move LV qi; invigorate blood; open GB/BL channels",
     "– tonify SP (and KD if indicated) to support muscles",
     "– warm channels and dispel cold/damp as needed"
   ].join("\n");
 
-  let pointsLine="";
-  if(pointsFound.size>0){
-    const list=[...pointsFound].map(p=>/^[A-Z]{2}\d{1,2}$/.test(p)?p:p.toLowerCase());
-    pointsLine="– points used: "+[...new Set(list)].join(", ");
+  /* acupuncture plan — interventions only */
+  let pointsLine = "";
+  if (pointsFound.size > 0) {
+    const list = Array.from(pointsFound).map(p => /^[A-Z]{2}\d{1,2}$/.test(p) ? p : p.toLowerCase());
+    pointsLine = "– points used: " + Array.from(new Set(list)).join(", ");
   }
-  const acupuncturePlan=[
+
+  const acupuncturePlan = [
     "acupuncture plan:",
     "acupuncture",
     "– channels: LV, SP, GB, BL, ST as indicated; local ashi points",
@@ -447,13 +613,24 @@ document.getElementById("generateNote").onclick = function() {
     "– crystals (if used): amethyst (calming), citrine (grounding)"
   ].join("\n");
 
-  const currentHerbsRaw=localStorage.getItem("currentHerbs");
-  let currentHerbsList=[]; if(currentHerbsRaw){ try{ currentHerbsList=JSON.parse(currentHerbsRaw)||[]; }catch{} }
-  let herbLines=[]; if(currentHerbsList.length){ currentHerbsList.forEach(h=>herbLines.push("– "+(h.name||"").toLowerCase()+(h.note?" — "+h.note.toLowerCase():""))); }
-  const herbsSection=["herbal recommendations (patent formulas):", herbLines.length?herbLines.join("\n"):"– none today"].join("\n");
+  /* herbs section */
+  const currentHerbsRaw = localStorage.getItem("currentHerbs");
+  let currentHerbsList = [];
+  if (currentHerbsRaw) { try { currentHerbsList = JSON.parse(currentHerbsRaw) || []; } catch (e) { currentHerbsList = []; } }
+  let herbLines = [];
+  if (currentHerbsList.length) {
+    currentHerbsList.forEach(h => {
+      herbLines.push("– " + (h.name || "").toLowerCase() + (h.note ? " — " + h.note.toLowerCase() : ""));
+    });
+  }
+  const herbsSection = [
+    "herbal recommendations (patent formulas):",
+    herbLines.length ? herbLines.join("\n") : "– none today"
+  ].join("\n");
   localStorage.removeItem("currentHerbs");
 
-  const advice=[
+  /* advice */
+  const advice = [
     "advice:",
     "– home heat application, keep tissues covered in cold weather",
     "– activity modification and pacing",
@@ -461,44 +638,91 @@ document.getElementById("generateNote").onclick = function() {
     "– monitor response and adjust running volume"
   ].join("\n");
 
-  function suggestICD(text){
-    const picks=[], add=c=>{ if(c && !picks.includes(c)) picks.push(c); };
-    const hasRight=/\bright\b|\br\b/.test(" "+text+" "), hasLeft=/\bleft\b|\bl\b/.test(" "+text+" ");
-    if(text.includes("neck")) add("M54.2 cervicalgia");
-    if(text.includes("thoracic")||text.includes("mid back")) add("M54.6 pain in thoracic spine");
-    if(text.includes("low back")||text.includes("lumbar")) add("M54.50 low back pain, unspecified");
-    if(text.includes("it band")||text.includes("knee")){
-      if(hasRight) add("M25.561 pain in R knee"); if(hasLeft) add("M25.562 pain in L knee");
-      if(!hasRight && !hasLeft) add("M25.569 pain in unspecified knee");
-    }
-    if(text.includes("shoulder")){ if(hasRight) add("M25.511 pain in R shoulder"); if(hasLeft) add("M25.512 pain in L shoulder"); }
-    if(text.includes("hip")){ if(hasRight) add("M25.551 pain in R hip"); if(hasLeft) add("M25.552 pain in L hip"); }
-    if(text.includes("ankle")||text.includes("foot")){ if(hasRight) add("M25.571 pain in R ankle/foot"); if(hasLeft) add("M25.572 pain in L ankle/foot"); }
-    if(text.includes("elbow")){ if(hasRight) add("M25.521 pain in R elbow"); if(hasLeft) add("M25.522 pain in L elbow"); }
-    if(text.includes("tmj")||text.includes("jaw")){ if(hasRight) add("M26.621 R TMJ pain"); if(hasLeft) add("M26.622 L TMJ pain"); }
-    if(text.includes("tinnitus")){ if(hasRight) add("H93.11 tinnitus R"); if(hasLeft) add("H93.12 tinnitus L"); if(!hasRight && !hasLeft) add("H93.13 tinnitus B"); }
-    if(text.includes("headache")) add("R51.9 headache, unspecified");
-    if(text.includes("migraine")) add("G43.909 migraine, unsp, not intractable, w/o status migrainosus");
-    if(text.includes("insomnia")||text.includes("sleep")) add("G47.00 insomnia, unspecified");
-    if(text.includes("nausea")) add("R11.0 nausea");
-    if(text.includes("gas")||text.includes("bloating")||text.includes("flatulence")) add("R14.3 flatulence");
-    if(text.includes("myofascial")||text.includes("myalgia")||text.includes("muscle pain")) add("M79.18 myofascial pain");
-    const pool=["M79.10 myalgia, unspecified","M79.18 myofascial pain","M54.50 low back pain, unspecified","M54.2 cervicalgia"];
-    for(const g of pool){ if(picks.length>=4) break; add(g); }
-    return picks.slice(0,4);
-  }
-  const icdSuggested=suggestICD(t).map(c=>"– "+c.toLowerCase()).join("\n");
-  const icdSection="icd-10 codes:\n"+(icdSuggested || "– to be added");
+  /* ICD-10 auto-suggest (3–4) */
+  function suggestICD(text) {
+    const picks = [];
+    const add = code => { if (code && !picks.includes(code)) picks.push(code); };
+    const hasRight = /\bright\b|\br\b/.test(" " + text + " ");
+    const hasLeft  = /\bleft\b|\bl\b/.test(" " + text + " ");
 
-  const output=[hpi,"",subjective,"",objective,"",tongue,"",pulse,"",assessment,"",treatmentPrinciple,"",acupuncturePlan,"",herbsSection,"",advice,"",icdSection].join("\n");
-  document.getElementById("outputText").value=output; localStorage.setItem("lastNote",output);
+    if (text.includes("neck")) add("M54.2 cervicalgia");
+    if (text.includes("thoracic") || text.includes("mid back")) add("M54.6 pain in thoracic spine");
+    if (text.includes("low back") || text.includes("lumbar")) add("M54.50 low back pain, unspecified");
+    if (text.includes("it band") || text.includes("knee")) {
+      if (hasRight) add("M25.561 pain in R knee");
+      if (hasLeft)  add("M25.562 pain in L knee");
+      if (!hasRight && !hasLeft) add("M25.569 pain in unspecified knee");
+    }
+    if (text.includes("shoulder")) {
+      if (hasRight) add("M25.511 pain in R shoulder");
+      if (hasLeft)  add("M25.512 pain in L shoulder");
+    }
+    if (text.includes("hip")) {
+      if (hasRight) add("M25.551 pain in R hip");
+      if (hasLeft)  add("M25.552 pain in L hip");
+    }
+    if (text.includes("ankle") || text.includes("foot")) {
+      if (hasRight) add("M25.571 pain in R ankle/foot");
+      if (hasLeft)  add("M25.572 pain in L ankle/foot");
+    }
+    if (text.includes("elbow")) {
+      if (hasRight) add("M25.521 pain in R elbow");
+      if (hasLeft)  add("M25.522 pain in L elbow");
+    }
+    if (text.includes("tmj") || text.includes("jaw")) {
+      if (hasRight) add("M26.621 R TMJ pain");
+      if (hasLeft)  add("M26.622 L TMJ pain");
+    }
+    if (text.includes("tinnitus")) {
+      if (hasRight) add("H93.11 tinnitus R");
+      if (hasLeft)  add("H93.12 tinnitus L");
+      if (!hasRight && !hasLeft) add("H93.13 tinnitus B");
+    }
+    if (text.includes("headache")) add("R51.9 headache, unspecified");
+    if (text.includes("migraine")) add("G43.909 migraine, unsp, not intractable, w/o status migrainosus");
+    if (text.includes("insomnia") || text.includes("sleep")) add("G47.00 insomnia, unspecified");
+    if (text.includes("nausea")) add("R11.0 nausea");
+    if (text.includes("gas") || text.includes("bloating") || text.includes("flatulence")) add("R14.3 flatulence");
+    if (text.includes("myofascial") || text.includes("myalgia") || text.includes("muscle pain")) add("M79.18 myofascial pain");
+
+    const generalPool = [
+      "M79.10 myalgia, unspecified",
+      "M79.18 myofascial pain",
+      "M54.50 low back pain, unspecified",
+      "M54.2 cervicalgia"
+    ];
+    for (const g of generalPool) { if (picks.length >= 4) break; add(g); }
+    return picks.slice(0, 4);
+  }
+
+  const icdSuggested = suggestICD(t).map(c => "– " + c.toLowerCase()).join("\n");
+  const icdSection = "icd-10 codes:\n" + (icdSuggested || "– to be added");
+
+  /* assemble */
+  const output = [
+    hpi, "", subjective, "", objective, "", tongue, "", pulse, "",
+    assessment, "", treatmentPrinciple, "", acupuncturePlan, "", herbsSection, "", advice, "", icdSection
+  ].join("\n");
+
+  document.getElementById("outputText").value = output;
+  localStorage.setItem("lastNote", output);
 };
 
-document.getElementById("duplicateLast").onclick=function(){ let last=localStorage.getItem("lastNote"); if(last) document.getElementById("outputText").value=last; };
-document.getElementById("clearOutput").onclick=function(){ document.getElementById("outputText").value=""; };
-document.getElementById("copyNote").onclick=function(){
-  const out=document.getElementById("outputText"); out.focus(); out.select();
-  try{ document.execCommand("copy"); } catch(e){ navigator.clipboard.writeText(out.value); }
+/* duplicate last note */
+document.getElementById("duplicateLast").onclick = function() {
+  let last = localStorage.getItem("lastNote");
+  if (last) document.getElementById("outputText").value = last;
+};
+/* clear output */
+document.getElementById("clearOutput").onclick = function() {
+  document.getElementById("outputText").value = "";
+};
+/* copy to clipboard */
+document.getElementById("copyNote").onclick = function() {
+  const out = document.getElementById("outputText");
+  out.focus(); out.select();
+  try { document.execCommand("copy"); }
+  catch (e) { navigator.clipboard.writeText(out.value); }
 };
 </script>
 
