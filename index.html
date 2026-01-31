@@ -13,24 +13,21 @@
   <meta name="theme-color" content="#4F3D5C">
 
   <!-- home‑screen icon (ensure icon-180.png sits next to index.html) -->
-  icon-180.png?v=3
-  icon-180.png?v=3
+  icon-180.png?v=4
+  icon-180.png?v=4
 
   <style>
   :root {
     --bg: #ffffff;
-    --text: #444444;        /* body */
+    --text: #444444;
     --muted: #666666;
 
     --card-bg: #ffffff;
     --border: #e5e7eb;
 
-    /* primary brand accent (purple) */
-    --accent: #4F3D5C;
+    --accent: #4F3D5C;      /* purple */
     --accent-text: #ffffff;
-
-    /* highlight accent (green) */
-    --accent-green: #BADA55;
+    --accent-green: #BADA55; /* green */
 
     --secondary: #666666;
     --danger: #4F3D5C;
@@ -91,20 +88,31 @@
   #toggleTheme.small { padding:8px 10px; font-size:14px; border-radius:10px; }
   .chip { padding:6px 10px; border-radius:999px; background:#F3F8DB; border:1px solid #CFE78E; color:var(--text); font-weight:400; }
 
-  /* modal for AI settings */
+  /* ===== two-pass progress modal ===== */
   .modal-backdrop {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:999;
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;
     align-items:center; justify-content:center; padding:16px;
   }
   .modal {
-    width:100%; max-width:700px; background:var(--card-bg); color:var(--text);
+    width:100%; max-width:720px; background:var(--card-bg); color:var(--text);
     border:1px solid var(--border); border-radius:16px; padding:16px;
   }
-  .modal h2 { margin:0 0 8px; font-size:22px; }
-  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  .modal .row { display:flex; gap:8px; align-items:center; }
-  .muted { color:var(--muted); font-size:13px; }
-  .right { text-align:right; }
+  .progress-bar {
+    height:10px; width:100%; background:#eee; border-radius:999px; overflow:hidden; margin:8px 0 12px;
+  }
+  .progress-bar > div {
+    height:100%; width:0%; background:var(--accent-green); transition:width .25s ease;
+  }
+  .log {
+    max-height:140px; overflow:auto; background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:13px;
+  }
+
+  /* ===== pass-1 preview panel ===== */
+  .preview {
+    margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:12px; background:#fdfdfd;
+  }
+  .preview h3 { margin:0 0 8px; font-size:18px; color:var(--accent); }
+  .preview textarea { height:160px; }
   </style>
 </head>
 <body>
@@ -130,12 +138,18 @@
     <button id="clearInput" class="danger">clear input</button>
   </div>
 
-  <div class="section-title">ai generation</div>
+  <div class="section-title">ai generation (two‑pass)</div>
   <div class="flex-row">
     <button id="aiGenerate">ai generate note</button>
     <button id="duplicateLast" class="secondary">duplicate last</button>
   </div>
-  <div class="notice">you control when it runs. paste/dictate first, make edits, then tap <b>ai generate note</b>.</div>
+  <div class="notice">you edit first, then click generate. pass 1 extracts facts (with preview), pass 2 writes the final note.</div>
+
+  <div class="preview" id="pass1Preview" style="display:none;">
+    <h3>ai summary preview (from pass 1)</h3>
+    <div class="notice">this shows what the ai captured from your transcript before drafting the final note.</div>
+    <textarea id="pass1Text" readonly></textarea>
+  </div>
 
   <div class="section-title">quick modules</div>
   <div id="moduleButtons"></div>
@@ -189,11 +203,24 @@
   <div class="notice">tip: add this page to your ipad home screen from safari → share → add to home screen (enable “open as web app”).</div>
 </div>
 
+<!-- two-pass progress modal -->
+<div id="tpModal" class="modal-backdrop">
+  <div class="modal">
+    <h2>generating note (two‑pass)</h2>
+    <div id="tpStep" class="notice">preparing…</div>
+    <div class="progress-bar"><div id="tpProg"></div></div>
+    <div class="log" id="tpLog"></div>
+    <div style="text-align:right; margin-top:10px;">
+      <button id="tpClose" class="secondary small">close</button>
+    </div>
+  </div>
+</div>
+
 <!-- AI settings modal -->
 <div id="aiModalBackdrop" class="modal-backdrop">
   <div class="modal">
     <h2>ai settings</h2>
-    <p class="muted">your key is stored only on this device (localStorage). for a future hipaa‑aligned rollout, we can move this behind an azure proxy so keys never touch the browser.</p>
+    <p class="notice">your key is stored only on this device (localStorage). for a future hipaa‑aligned rollout, we can move this behind an azure proxy so keys never touch the browser.</p>
 
     <div class="grid">
       <div>
@@ -225,9 +252,9 @@
       </div>
     </div>
 
-    <div class="row" style="justify-content:space-between; margin-top:12px;">
-      <span class="muted">tip: do not share keys. copy them from your provider dashboard and paste here.</span>
-      <div class="right">
+    <div class="flex-row" style="justify-content:space-between; margin-top:12px;">
+      <span class="notice">tip: copy your key from your provider dashboard and paste here.</span>
+      <div>
         <button id="aiSave" class="small-btn">save</button>
         <button id="aiClose" class="secondary small">close</button>
       </div>
@@ -368,65 +395,6 @@ if (savedCombos) { try { combos = JSON.parse(savedCombos); } catch (e) {} }
 refreshCombos();
 
 /* =========================
-   herbs (patent formulas only)
-========================= */
-let herbFormulas = {
-  "jia wei xiao yao wan":"stress/irritability with heat signs",
-  "xiao yao wan":"lv qi stagnation with sp deficiency",
-  "chai hu shu gan wan":"lv qi stagnation, hypochondriac distention, pain",
-  "shu jin wan":"sinew/blood stasis, pain and stiffness",
-  "du huo ji sheng wan":"chronic wind-cold-damp bi with deficiency",
-  "shen tong zhu yu wan":"blood stasis pain, fixed stabbing pain",
-  "juan bi wan":"wind-cold-damp bi with obstruction",
-  "yu ping feng wan":"wei qi support",
-  "gui pi wan":"sp qi + ht blood deficiency (fatigue, sleep)",
-  "tian wang bu xin dan":"ht/kd yin deficiency insomnia, palpitations",
-  "suan zao ren tang wan":"insomnia due to lv blood/yin deficiency",
-  "ban xia hou po wan":"plum-pit qi (phlegm + qi stagnation)",
-  "bao he wan":"food stagnation",
-  "zuo gui wan":"kd yin deficiency",
-  "you gui wan":"kd yang deficiency"
-};
-const herbButtons = document.getElementById("herbButtons");
-const herbDropdown = document.getElementById("herbDropdown");
-function refreshHerbs() {
-  herbButtons.innerHTML = ""; herbDropdown.innerHTML = "";
-  for (const name in herbFormulas) {
-    const b = document.createElement("button");
-    b.className = "small-btn"; b.textContent = name;
-    b.onclick = () => { addHerbToList(name, herbFormulas[name]); };
-    herbButtons.appendChild(b);
-    const opt = document.createElement("option");
-    opt.value = name; opt.textContent = name; herbDropdown.appendChild(opt);
-  }
-}
-function addHerbToList(name, note) {
-  const key = "currentHerbs"; const existing = localStorage.getItem(key);
-  let arr = []; if (existing) { try { arr = JSON.parse(existing) || []; } catch(e) { arr = []; } }
-  if (!arr.find(h => h.name === name)) {
-    arr.push({ name, note }); localStorage.setItem(key, JSON.stringify(arr));
-  }
-  const input = document.getElementById("inputText");
-  input.value += ` herbal: ${name}${note ? " (" + note + ")" : ""}`;
-}
-document.getElementById("insertHerb").onclick = () => {
-  const name = herbDropdown.value; addHerbToList(name, herbFormulas[name]);
-};
-document.getElementById("saveHerb").onclick = () => {
-  const nm = document.getElementById("customHerbName").value.trim().toLowerCase();
-  const nt = document.getElementById("customHerbNote").value.trim().toLowerCase();
-  if (!nm) return;
-  herbFormulas[nm] = nt || "";
-  localStorage.setItem("savedHerbs", JSON.stringify(herbFormulas));
-  refreshHerbs();
-  document.getElementById("customHerbName").value = "";
-  document.getElementById("customHerbNote").value = "";
-};
-const savedHerbs = localStorage.getItem("savedHerbs");
-if (savedHerbs) { try { herbFormulas = JSON.parse(savedHerbs); } catch(e) {} }
-refreshHerbs();
-
-/* =========================
    AI settings (stored locally)
 ========================= */
 const aiDefaults = {
@@ -445,7 +413,7 @@ function loadAIConfig(){
 function saveAIConfig(cfg){
   localStorage.setItem("aiConfig", JSON.stringify(cfg));
 }
-const modalBackdrop = document.getElementById("aiModalBackdrop");
+const aiModal = document.getElementById("aiModalBackdrop");
 document.getElementById("aiSettingsBtn").onclick = () => {
   const cfg = loadAIConfig();
   document.getElementById("aiProvider").value = cfg.provider;
@@ -454,9 +422,9 @@ document.getElementById("aiSettingsBtn").onclick = () => {
   document.getElementById("aiKey").value = cfg.apiKey;
   document.getElementById("aiApiVersion").value = cfg.apiVersion;
   document.getElementById("aiTemp").value = cfg.temperature;
-  modalBackdrop.style.display = "flex";
+  aiModal.style.display = "flex";
 };
-document.getElementById("aiClose").onclick = () => { modalBackdrop.style.display = "none"; };
+document.getElementById("aiClose").onclick = () => { aiModal.style.display = "none"; };
 document.getElementById("aiSave").onclick = () => {
   const cfg = {
     provider: document.getElementById("aiProvider").value,
@@ -467,52 +435,134 @@ document.getElementById("aiSave").onclick = () => {
     temperature: parseFloat(document.getElementById("aiTemp").value) || aiDefaults.temperature
   };
   saveAIConfig(cfg);
-  modalBackdrop.style.display = "none";
+  aiModal.style.display = "none";
 };
 
 /* =========================
-   AI generate (manual—only when you click)
+   two‑pass generation
 ========================= */
-document.getElementById("aiGenerate").onclick = async () => {
-  const transcript = (document.getElementById("inputText").value || "").trim();
-  if (!transcript) { alert("paste or dictate a transcript first."); return; }
-  const cfg = loadAIConfig();
-  if (!cfg.apiKey) { alert("open ai settings and paste your api key."); return; }
+const CHUNK_CHARS = 8000;     // target size per chunk (characters)
+const CHUNK_OVERLAP = 800;    // overlap to avoid boundary loss
+const MAX_TRIES = 3;
+const BACKOFFS = [2000, 4000, 8000]; // 429 retry delays
 
-  const out = document.getElementById("outputText");
-  out.value = "ai: generating note…";
+const tpModal = document.getElementById('tpModal');
+const tpProg = document.getElementById('tpProg');
+const tpStep = document.getElementById('tpStep');
+const tpLog  = document.getElementById('tpLog');
+document.getElementById('tpClose').onclick = ()=> tpModal.style.display = 'none';
 
-  try {
-    const json = await callAIForNote(cfg, transcript);
-    const note = renderNoteFromJSON(json);
-    out.value = note;
-    localStorage.setItem("lastNote", note);
-  } catch (e) {
-    out.value = "ai error: " + (e?.message || e);
+function openProgress(msg){
+  tpStep.textContent = msg || 'preparing…';
+  tpProg.style.width = '0%';
+  tpLog.textContent = '';
+  tpModal.style.display = 'flex';
+}
+function logProgress(line){
+  tpLog.textContent += (tpLog.textContent ? '\n' : '') + line;
+  tpLog.scrollTop = tpLog.scrollHeight;
+}
+function setPct(p){ tpProg.style.width = Math.max(0, Math.min(100, p)) + '%'; }
+
+/* chunk the transcript into overlapping pieces (no deletion) */
+function chunkTranscript(text){
+  const chunks = [];
+  let i = 0;
+  while (i < text.length) {
+    const end = Math.min(text.length, i + CHUNK_CHARS);
+    const chunk = text.slice(i, end);
+    chunks.push(chunk.trim());
+    if (end >= text.length) break;
+    i = end - CHUNK_OVERLAP; // overlap
+    if (i < 0) i = 0;
   }
-};
+  return chunks.filter(Boolean);
+}
 
-function aiSystemPrompt(){
+/* unified API caller with backoff; returns message.content text */
+async function aiChat(cfg, messages){
+  const base = (cfg.baseUrl || "https://api.openai.com").replace(/\/+$/,"");
+  let url, headers, body;
+
+  if (cfg.provider === "azure") {
+    url = `${base}/openai/deployments/${encodeURIComponent(cfg.model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion)}`;
+    headers = { "Content-Type":"application/json", "api-key": cfg.apiKey };
+    body = { temperature: cfg.temperature ?? 0.2, response_format: { type:"json_object" }, messages };
+  } else {
+    url = `${base}/v1/chat/completions`;
+    headers = { "Content-Type":"application/json", "Authorization": `Bearer ${cfg.apiKey}` };
+    body = { model: cfg.model || "gpt-4o-mini", temperature: cfg.temperature ?? 0.2, response_format: { type:"json_object" }, messages };
+  }
+
+  for (let attempt=1; attempt<=MAX_TRIES; attempt++){
+    const resp = await fetch(url, { method:"POST", headers, body: JSON.stringify(body) });
+    if (resp.ok){
+      const data = await resp.json();
+      const content = data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || "";
+      if (!content) throw new Error("no content in response");
+      return content;
+    }
+    const txt = await resp.text().catch(()=> "");
+    if (resp.status === 429 && attempt < MAX_TRIES){
+      await new Promise(r=>setTimeout(r, BACKOFFS[attempt-1]));
+      continue;
+    }
+    if (resp.status === 401) throw new Error("unauthorized (401): check your api key.");
+    if (resp.status === 400) throw new Error("bad request (400): check model name / base url.");
+    if (resp.status >= 500) throw new Error("server error: try again in a moment.");
+    throw new Error(`api ${resp.status}: ${txt || "no server message"}`);
+  }
+  throw new Error("api 429: still rate-limited after retries; wait a minute and try again.");
+}
+
+/* pass‑1: extract facts from a single chunk */
+function pass1System(){
+  return [
+    "you are a careful tcm-intake extractor for an acupuncture clinic.",
+    "task: read ONLY the provided transcript chunk and output STRICT JSON with facts (no rewriting, no opinions).",
+    "always use lowercase; laterality abbreviations r/l/b; tcm meridians abbreviated (lv, sp, gb, bl, st, lu, li, si, ht, pc, kd, cv, gv).",
+    "capture personal context if mentioned: job (occupation), family, upcoming travel or recent travel.",
+    "json schema:",
+    "{",
+    '  "hpi_bits": ["short phrases"],',
+    '  "subjective_sections": [ {"header":"string","bullets":["string","string"]} ],',
+    '  "objective_sections":  [ {"header":"string","bullets":["string","string"]} ],',
+    '  "explicit_tongue": "string or empty",',
+    '  "explicit_pulse":  "string or empty",',
+    '  "tcm_clues": ["lv qi stagnation","blood stasis","damp","heat","cold","deficiency","excess","wind","phlegm"],',
+    '  "personal_context": ["job: …","family: …","travel: …"],',
+    '  "icd_candidates": ["m25.561 pain in r knee","m54.2 cervicalgia", "..."],',
+    '  "herb_candidates": ["jia wei xiao yao wan","du huo ji sheng wan", "..."]',
+    "}",
+    "return only the json."
+  ].join("\n");
+}
+
+/* pass‑2: final note system prompt */
+function pass2System(){
   return [
     "you are a tcm-savvy clinical scribe for an acupuncture practice.",
-    "output must be ALL LOWERCASE.",
-    "respect laterality abbreviations: use R, L, or B (e.g., R shoulder, L knee, B peroneals).",
-    "use abbreviated tcm meridian names: lv, sp, gb, bl, st, lu, li, si, ht, pc, kd, cv, gv.",
-    "NEVER use the term 'dry needling'.",
-    "herb_formulas must be PATENT FORMULAS ONLY (no raw decoctions).",
-    "if the transcript does not specify tongue or pulse, you MUST still provide them AS DEDUCED and clearly label them.",
-    "always infer points/plan from transcript context; keep interventions appropriate for acupuncture (no meds).",
-    "structure your output as STRICT JSON and nothing else, matching EXACTLY this schema:",
+    "use ALL extracted facts provided (array of chunk extracts) to write ONE consolidated note.",
+    "rules:",
+    "- ALL LOWERCASE.",
+    "- use laterality abbreviations r, l, b.",
+    "- use abbreviated tcm meridians: lv, sp, gb, bl, st, lu, li, si, ht, pc, kd, cv, gv.",
+    "- never use the term 'dry needling'.",
+    "- herb formulas must be PATENT formulas only.",
+    "- if tongue/pulse not explicit in extracts, DEDUCE them and label clearly as deduced.",
+    "- include personal context (job, family, travel) if present.",
+    "output STRICT JSON with this schema:",
     "{",
-    '  "hpi": "string (1-3 sentences, strictly based on transcript)",',
+    '  "hpi": "string (1–3 sentences strictly from extracts)",',
     '  "subjective": { "sections": [ {"header":"string","bullets":["string","string"]} ] },',
     '  "objective":  { "sections": [ {"header":"string","bullets":["string","string"]} ] },',
-    '  "tongue": "string (e.g., deduced: *description* if not explicitly provided)",',
-    '  "pulse":  "string (e.g., deduced: *description* if not explicitly provided)",',
+    '  "personal_context": ["string","string"],',
+    '  "tongue": "string (explicit or deduced: …)",',
+    '  "pulse":  "string (explicit or deduced: …)",',
     '  "assessment": { "bullets":["string","string"], "tcm_dx":["string","string"] },',
     '  "treatment_principle": ["string","string"],',
     '  "acupuncture_plan": {',
-    '     "channels":"string (e.g., lv, sp, gb, bl, st; local ashi points)",',
+    '     "channels":"string",',
     '     "points_used":["string","string"],',
     '     "interventions":["acupuncture","motor/trigger point release"],',
     '     "adjuncts":["infrared","cupping","guasha","e-stim"]',
@@ -523,76 +573,11 @@ function aiSystemPrompt(){
     '  "confidence": 0.0,',
     '  "assumptions": ["string","string"]',
     "}",
-    "— respond with ONLY the json, no prose."
+    "respond with ONLY the json."
   ].join("\n");
 }
 
-async function callAIForNote(cfg, transcript){
-  const system = aiSystemPrompt();
-  const user = transcript;
-
-  let url = "", headers = {}, body = {};
-  const temperature = cfg.temperature ?? 0.2;
-
-  if (cfg.provider === "azure") {
-    // azure openai chat completions
-    const base = cfg.baseUrl.replace(/\/+$/,"");
-    url = `${base}/openai/deployments/${encodeURIComponent(cfg.model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion)}`;
-    headers = { "Content-Type":"application/json", "api-key": cfg.apiKey };
-    body = {
-      temperature,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
-      ]
-    };
-  } else {
-    // openai (default)
-    const base = cfg.baseUrl.replace(/\/+$/,"");
-    url = `${base}/v1/chat/completions`;
-    headers = { "Content-Type":"application/json", "Authorization": `Bearer ${cfg.apiKey}` };
-    body = {
-      model: cfg.model,
-      temperature,
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user }
-      ]
-    };
-  }
-
-  // WARNING: browser requests expose your key to this device.
-  const resp = await fetch(url, { method:"POST", headers, body: JSON.stringify(body) });
-  if (!resp.ok) {
-    const txt = await resp.text();
-    throw new Error(`api ${resp.status}: ${txt}`);
-  }
-  const data = await resp.json();
-
-  // normalize choices content
-  let content = "";
-  if (data.choices && data.choices[0]?.message?.content) {
-    content = data.choices[0].message.content;
-  } else if (data.choices && data.choices[0]?.text) {
-    content = data.choices[0].text;
-  } else {
-    throw new Error("no content in response");
-  }
-
-  // parse json
-  try {
-    const json = JSON.parse(content);
-    return json;
-  } catch(e) {
-    // sometimes the model wraps code fences; try to extract
-    const m = content.match(/\{[\s\S]*\}$/);
-    if (m) { return JSON.parse(m[0]); }
-    throw new Error("could not parse ai json");
-  }
-}
-
+/* render final note from pass‑2 json */
 function renderNoteFromJSON(j){
   function bullets(arr){ return (arr||[]).map(s=>"– "+(s||"")).join("\n"); }
   function sections(sec){
@@ -608,7 +593,10 @@ function renderNoteFromJSON(j){
   const subj = "subjective:\n" + (sections(j.subjective)||"general\n– no specific subjective items captured");
   const obj  = "objective:\n" + (sections(j.objective)||"");
 
-  // always present; model should label "deduced" when absent in transcript
+  const pc   = j.personal_context && j.personal_context.length
+    ? "personal context:\n" + bullets(j.personal_context)
+    : "";
+
   const tongue = "tongue:\n" + (j.tongue || "deduced: not specified");
   const pulse  = "pulse:\n"  + (j.pulse  || "deduced: not specified");
 
@@ -639,18 +627,129 @@ function renderNoteFromJSON(j){
   const advice = "advice:\n" + bullets(j.advice||[]);
   const icd    = "icd-10 codes:\n" + bullets(j.icd10||[]);
 
-  // confidence & assumptions
   const confVal = (typeof j.confidence === "number" && isFinite(j.confidence)) ? j.confidence : null;
   const confidenceLine = confVal!==null ? ("confidence & assumptions:\n– confidence: " + confVal.toFixed(2)) : "confidence & assumptions:";
   const assumptions = bullets(j.assumptions||[]);
   const confBlock = assumptions ? (confidenceLine + "\n" + assumptions) : confidenceLine;
 
   return [
-    hpi, "", subj, "", obj, "", tongue, "", pulse, "",
+    hpi, "", subj, "", obj, "",
+    pc ? pc + "\n" : "",
+    tongue, "", pulse, "",
     assess, "", principle, "", plan, "", herbs, "", advice, "",
     confBlock, "", icd
   ].join("\n");
 }
+
+/* two‑pass driver */
+document.getElementById("aiGenerate").onclick = async () => {
+  const raw = (document.getElementById("inputText").value || "").trim();
+  if (!raw){ alert("paste or dictate a transcript first."); return; }
+
+  const cfg = loadAIConfig();
+  if (!cfg.apiKey){ alert("open ai settings → paste your api key."); return; }
+
+  try {
+    /* pass 1: chunk + extract */
+    openProgress("pass 1 of 2 — extracting facts…");
+    logProgress("splitting transcript into overlapping chunks…");
+    const chunks = chunkTranscript(raw);
+    if (!chunks.length){ throw new Error("no content after chunking."); }
+
+    const extList = [];
+    for (let i=0; i<chunks.length; i++){
+      const pct = Math.round(((i)/Math.max(1,(chunks.length+1))) * 100);
+      setPct(pct);
+      tpStep.textContent = `pass 1 — chunk ${i+1} of ${chunks.length}`;
+      logProgress(`processing chunk ${i+1}/${chunks.length}…`);
+
+      const sys = pass1System();
+      const user = chunks[i];
+
+      const content = await aiChat(cfg, [
+        { role: "system", content: sys },
+        { role: "user",   content: user }
+      ]);
+
+      let json;
+      try { json = JSON.parse(content); }
+      catch(e){
+        const m = content.match(/\{[\s\S]*\}$/);
+        if (m) json = JSON.parse(m[0]); else throw new Error("could not parse pass‑1 json");
+      }
+      extList.push(json);
+    }
+
+    /* show pass‑1 preview (human-readable outline) */
+    const preview = document.getElementById("pass1Preview");
+    const previewBox = document.getElementById("pass1Text");
+    const outline = [];
+
+    const addLines = (hdr, arr)=>{
+      if (arr && arr.length){
+        outline.push(hdr + ":");
+        arr.forEach(s => outline.push("– " + s));
+        outline.push("");
+      }
+    };
+
+    // simple aggregation for preview only (not used for synthesis)
+    const pcAll = [], hpiBitsAll = [], tcmAll = [], icdAll = [], herbsAll = [];
+    extList.forEach(e=>{
+      (e.personal_context||[]).forEach(s=> pcAll.push(s));
+      (e.hpi_bits||[]).forEach(s=> hpiBitsAll.push(s));
+      (e.tcm_clues||[]).forEach(s=> tcmAll.push(s));
+      (e.icd_candidates||[]).forEach(s=> icdAll.push(s));
+      (e.herb_candidates||[]).forEach(s=> herbsAll.push(s));
+    });
+
+    addLines("hpi highlights", Array.from(new Set(hpiBitsAll)));
+    addLines("personal context", Array.from(new Set(pcAll)));
+    addLines("tcm clues", Array.from(new Set(tcmAll)));
+    addLines("icd candidates", Array.from(new Set(icdAll)));
+    addLines("herb candidates", Array.from(new Set(herbsAll)));
+
+    previewBox.value = outline.join("\n").trim() || "(no preview items extracted)";
+    preview.style.display = "block";
+
+    /* pass 2: consolidate into final note */
+    tpStep.textContent = "pass 2 of 2 — drafting final note…";
+    setPct(90);
+    logProgress("consolidating all extracts into a single structured note…");
+
+    const sys2 = pass2System();
+    const user2 = JSON.stringify({ extracts: extList });
+
+    const content2 = await aiChat(cfg, [
+      { role: "system", content: sys2 },
+      { role: "user",   content: user2 }
+    ]);
+
+    let finalJson;
+    try { finalJson = JSON.parse(content2); }
+    catch(e){
+      const m2 = content2.match(/\{[\s\S]*\}$/);
+      if (m2) finalJson = JSON.parse(m2[0]); else throw new Error("could not parse pass‑2 json");
+    }
+
+    const note = renderNoteFromJSON(finalJson);
+    document.getElementById("outputText").value = note;
+    localStorage.setItem("lastNote", note);
+
+    setPct(100);
+    tpStep.textContent = "done";
+    logProgress("completed ✔");
+  } catch (e){
+    tpStep.textContent = "error";
+    logProgress("error: " + (e?.message || e));
+  }
+};
+
+/* duplicate last */
+document.getElementById("duplicateLast").onclick = () => {
+  const last = localStorage.getItem("lastNote");
+  if (last) document.getElementById("outputText").value = last;
+};
 </script>
 
 </body>
