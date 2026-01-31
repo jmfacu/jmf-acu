@@ -1,0 +1,61 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>make icon — jmf acu</title>
+<style>
+  :root { --purple:#4F3D5C; }
+  body { margin:0; font-family: -apple-system, "Avenir Next", Avenir, Helvetica, Arial, sans-serif; background:#f6f6f6; color:#222; }
+  .wrap { max-width:600px; margin:24px auto; padding:16px; }
+  canvas { border-radius:24px; display:block; margin:12px 0; }
+  button { background:#4F3D5C; color:#fff; border:0; border-radius:10px; padding:12px 16px; font-size:16px; }
+  label { display:block; margin-top:8px; color:#555; }
+  input[type=color] { width:48px; height:32px; border:1px solid #ccc; border-radius:6px; margin-left:8px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>make icon — jmf acu</h1>
+  <p>this creates a 180×180 png with your brand purple and stacked “jmf / acu”.</p>
+  <label>background
+    <input id="bg" type="color" value="#4F3D5C">
+  </label>
+  <canvas id="c" width="180" height="180"></canvas>
+  <button id="dl">download icon-180.png</button>
+</div>
+<script>
+const c = document.getElementById('c');
+const ctx = c.getContext('2d', {alpha:false});
+const bg = document.getElementById('bg');
+function draw(){
+  // background
+  ctx.fillStyle = bg.value || '#4F3D5C';
+  ctx.fillRect(0,0,180,180);
+  // rounded corners visual (home screen masks, but we add subtle padding)
+  // stacked text
+  ctx.fillStyle = '#ffffff';
+  // Try to use Avenir Next if available on iPad
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  // first line: "jmf"
+  ctx.font = '700 56px "Avenir Next", Avenir, -apple-system, Helvetica, Arial, sans-serif';
+  ctx.fillText('jmf', 90, 72);
+  // second line: "acu"
+  ctx.font = '700 56px "Avenir Next", Avenir, -apple-system, Helvetica, Arial, sans-serif';
+  ctx.fillText('acu', 90, 126);
+}
+bg.addEventListener('input', draw);
+draw();
+document.getElementById('dl').addEventListener('click', ()=>{
+  const a = document.createElement('a');
+  a.download = 'icon-180.png';
+  a.href = c.toDataURL('image/png');
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+</script>
+</body>
+</html>
