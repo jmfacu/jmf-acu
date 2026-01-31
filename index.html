@@ -6,193 +6,136 @@
   <title>jmf acu</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- iPad/iOS: run as a standalone web app -->
+  <!-- iPad/iOS PWA -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="jmf acu">
   <meta name="theme-color" content="#4F3D5C">
 
-  <!-- ✅ home-screen icon (put icon-180.png in the repo root next to index.html) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=2">
-  <link rel="apple-touch-icon" href="icon-180.png?v=2">
+  <!-- home‑screen icon (ensure icon-180.png sits next to index.html) -->
+  icon-180.png?v=3
+  icon-180.png?v=3
 
   <style>
   :root {
-    /* ===== brand colors (light mode) ===== */
     --bg: #ffffff;
-    --text: #444444;        /* body copy */
+    --text: #444444;        /* body */
     --muted: #666666;
 
     --card-bg: #ffffff;
     --border: #e5e7eb;
 
-    /* primary accent (purple) */
-    --accent: #4F3D5C;      /* buttons, section titles, jmf/acu tile */
-    --accent-text: #ffffff; /* contrast on purple */
+    /* primary brand accent (purple) */
+    --accent: #4F3D5C;
+    --accent-text: #ffffff;
 
-    /* secondary accent (green) for helpful highlights */
-    --accent-green: #BADA55; /* focus rings, small buttons, chips */
+    /* highlight accent (green) */
+    --accent-green: #BADA55;
 
-    --secondary: #666666;   /* secondary buttons */
-    --danger: #4F3D5C;      /* no red */
+    --secondary: #666666;
+    --danger: #4F3D5C;
 
     --font-heading: "Avenir Next", Avenir, -apple-system, system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-body:    "Avenir Next", Avenir, -apple-system, system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
     --radius: 12px;
   }
-
   .dark {
-    /* ===== brand colors (dark mode) ===== */
-    --bg: #121212;
-    --text: #e6e6e6;
-    --muted: #b3b3b3;
-
-    --card-bg: #1b1b1b;
-    --border: #2a2a2a;
-
-    --accent: #4F3D5C;
-    --accent-text: #ffffff;
-
-    --secondary: #666666;
-    --danger: #4F3D5C;
-    --accent-green: #BADA55;
+    --bg: #121212; --text: #e6e6e6; --muted: #b3b3b3;
+    --card-bg: #1b1b1b; --border: #2a2a2a;
+    --accent: #4F3D5C; --accent-text: #ffffff;
+    --secondary: #666666; --danger: #4F3D5C; --accent-green: #BADA55;
   }
 
-  /* ===== global ===== */
   * { box-sizing: border-box; }
   body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-weight: 300; /* avenir light feel */
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:var(--font-body); font-weight:300;
+    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
   }
-  .container { padding: 16px; max-width: 1000px; margin: 0 auto; }
+  .container { padding:16px; max-width:1000px; margin:0 auto; }
+  .header { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:8px; }
 
-  /* header row */
-  .header {
-    display: flex; gap: 12px; align-items: center; justify-content: space-between;
-    margin-bottom: 8px;
-  }
+  h1, h2, h3, .section-title { font-family:var(--font-heading); font-weight:400; color:var(--text); }
+  h1 { font-size:28px; margin:0; text-transform:lowercase; }
+  .section-title { font-size:20px; font-weight:600; margin-top:20px; text-transform:lowercase; color:var(--accent); }
+  .notice { font-size:12px; color:var(--muted); margin-top:6px; }
 
-  /* headings */
-  h1, h2, h3, .section-title {
-    font-family: var(--font-heading);
-    font-weight: 400;
-    color: var(--text);
-  }
-  h1 { font-size: 28px; margin: 0; text-transform: lowercase; }
-
-  /* purple section titles */
-  .section-title {
-    font-size: 20px;
-    font-weight: 600;
-    margin-top: 20px;
-    text-transform: lowercase;
-    color: var(--accent);
-  }
-
-  .notice { font-size: 12px; color: var(--muted); margin-top: 6px; }
-
-  /* inputs / boxes */
   textarea, input[type="text"], select {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    background: var(--card-bg);
-    color: var(--text);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
+    width:100%; padding:10px; font-size:16px;
+    background:var(--card-bg); color:var(--text);
+    border:1px solid var(--border); border-radius:var(--radius);
   }
-  textarea.output-box { height: 420px; white-space: pre-wrap; }
+  textarea.output-box { height:420px; white-space:pre-wrap; }
+  hr { border:none; border-top:1px solid var(--border); margin:16px 0; }
+  .flex-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  #comboButtons, #moduleButtons, #herbButtons { display:flex; flex-wrap:wrap; gap:6px; }
 
-  hr { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-
-  .flex-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  #comboButtons, #moduleButtons, #herbButtons { display: flex; flex-wrap: wrap; gap: 6px; }
-
-  /* buttons (primary = purple with white text) */
   button {
-    padding: 12px 16px;
-    margin: 4px 0;
-    border: none;
-    border-radius: var(--radius);
-    font-size: 16px;
-    background: var(--accent);
-    color: var(--accent-text);
-    cursor: pointer;
-    text-transform: lowercase;
-    letter-spacing: 0.2px;
+    padding:12px 16px; margin:4px 0; border:none; border-radius:var(--radius);
+    font-size:16px; background:var(--accent); color:var(--accent-text);
+    cursor:pointer; text-transform:lowercase; letter-spacing:0.2px;
   }
-  button.secondary { background: var(--secondary); color: #ffffff; }
-  button.danger    { background: var(--danger);    color: #ffffff; }
+  button.secondary { background:var(--secondary); color:#fff; }
+  button.danger { background:var(--danger); color:#fff; }
+  .small-btn { padding:6px 10px; font-size:14px; background:var(--accent-green); color:#0b1324; border-radius:var(--radius); }
+  button:hover { filter:brightness(0.98); } button:active { transform:translateY(1px); }
+  select:focus, textarea:focus, input[type="text"]:focus { outline:2px solid rgba(186,218,85,0.45); border-color:var(--accent-green); }
 
-  /* small utility buttons (insert/add/save) = green */
-  .small-btn {
-    padding: 6px 10px; font-size: 14px;
-    background: var(--accent-green); color: #0b1324;
-    border-radius: var(--radius);
-  }
-
-  button:hover { filter: brightness(0.98); }
-  button:active { transform: translateY(1px); }
-
-  /* green focus cues */
-  select:focus, textarea:focus, input[type="text"]:focus {
-    outline: 2px solid rgba(186, 218, 85, 0.45);
-    border-color: var(--accent-green);
-  }
-
-  /* brand “jmf / acu” tile (purple) */
   .brand-btn {
-    display: inline-flex; flex-direction: column; align-items: center; justify-content: center;
-    width: 84px; height: 84px; padding: 0;
-    background: var(--accent); color: #ffffff; border-radius: 18px;
-    line-height: 1.05; text-transform: lowercase;
-    font-family: var(--font-heading); font-weight: 600;
+    display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+    width:84px; height:84px; padding:0; background:var(--accent); color:#fff; border-radius:18px;
+    line-height:1.05; text-transform:lowercase; font-family:var(--font-heading); font-weight:600;
   }
-  .brand-btn span { display: block; font-size: 22px; letter-spacing: 0.5px; }
+  .brand-btn span { display:block; font-size:22px; letter-spacing:0.5px; }
+  #toggleTheme.small { padding:8px 10px; font-size:14px; border-radius:10px; }
+  .chip { padding:6px 10px; border-radius:999px; background:#F3F8DB; border:1px solid #CFE78E; color:var(--text); font-weight:400; }
 
-  /* chips (green tint) */
-  .chip {
-    padding: 6px 10px; border-radius: 999px;
-    background: #F3F8DB;         /* light green */
-    border: 1px solid #CFE78E;   /* mid green */
-    color: var(--text); font-weight: 400;
+  /* modal for AI settings */
+  .modal-backdrop {
+    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:999;
+    align-items:center; justify-content:center; padding:16px;
   }
-
-  /* small toggle */
-  #toggleTheme.small { padding: 8px 10px; font-size: 14px; border-radius: 10px; }
+  .modal {
+    width:100%; max-width:700px; background:var(--card-bg); color:var(--text);
+    border:1px solid var(--border); border-radius:16px; padding:16px;
+  }
+  .modal h2 { margin:0 0 8px; font-size:22px; }
+  .grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .modal .row { display:flex; gap:8px; align-items:center; }
+  .muted { color:var(--muted); font-size:13px; }
+  .right { text-align:right; }
   </style>
 </head>
 <body>
 
 <div class="container">
   <div class="header">
-    <!-- brand button with stacked text -->
-    <button class="brand-btn" aria-label="jmf acu">
-      <span>jmf</span>
-      <span>acu</span>
-    </button>
-
+    <button class="brand-btn" aria-label="jmf acu"><span>jmf</span><span>acu</span></button>
     <div style="flex:1; padding-left:8px;">
       <h1>jmf acu</h1>
-      <div class="notice">local, hipaa-safe. data stays on this device. (speech-to-text requires internet.)</div>
+      <div class="notice">local ui. you control ai usage. (speech requires internet.)</div>
     </div>
-
-    <button id="toggleTheme" class="secondary small" title="toggle dark / light">toggle</button>
+    <div class="flex-row" style="gap:6px;">
+      <button id="aiSettingsBtn" class="small-btn">ai settings</button>
+      <button id="toggleTheme" class="secondary small" title="toggle dark / light">toggle</button>
+    </div>
   </div>
 
   <div class="section-title">transcript input</div>
   <textarea id="inputText" placeholder="paste transcript or use microphone..."></textarea>
+  <div class="flex-row">
+    <button id="startMic">🎤 start dictation</button>
+    <button id="stopMic" class="secondary">stop dictation</button>
+    <button id="clearInput" class="danger">clear input</button>
+  </div>
 
-  <button id="startMic">🎤 start dictation</button>
-  <button id="stopMic" class="secondary">stop dictation</button>
-  <button id="clearInput" class="danger">clear input</button>
+  <div class="section-title">ai generation</div>
+  <div class="flex-row">
+    <button id="aiGenerate">ai generate note</button>
+    <button id="duplicateLast" class="secondary">duplicate last</button>
+  </div>
+  <div class="notice">you control when it runs. paste/dictate first, make edits, then tap <b>ai generate note</b>.</div>
 
   <div class="section-title">quick modules</div>
   <div id="moduleButtons"></div>
@@ -210,8 +153,8 @@
 
   <div class="section-title">save custom combo</div>
   <div class="flex-row">
-    <input id="customComboName" type="text" placeholder="combo name" style="flex:1;">
-    <input id="customComboPoints" type="text" placeholder="points (e.g. LV3, SP6)" style="flex:1;">
+    <input id="customComboName" type="text" placeholder="combo name" style="flex:1%;">
+    <input id="customComboPoints" type="text" placeholder="points (e.g. LV3, SP6)" style="flex:1%;">
     <button id="saveCombo" class="small-btn">save combo</button>
   </div>
 
@@ -235,36 +178,79 @@
     <button id="addICD" class="small-btn">add to output</button>
   </div>
 
-  <div class="section-title">generate note</div>
-  <button id="generateNote">generate note</button>
-  <button id="duplicateLast">duplicate last note</button>
-
   <div class="section-title">output note</div>
   <textarea id="outputText" class="output-box" placeholder="your formatted note will appear here…"></textarea>
-
-  <button id="copyNote">copy to clipboard</button>
-  <button id="clearOutput" class="danger">clear output</button>
+  <div class="flex-row">
+    <button id="copyNote">copy to clipboard</button>
+    <button id="clearOutput" class="danger">clear output</button>
+  </div>
 
   <hr>
   <div class="notice">tip: add this page to your ipad home screen from safari → share → add to home screen (enable “open as web app”).</div>
 </div>
 
+<!-- AI settings modal -->
+<div id="aiModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <h2>ai settings</h2>
+    <p class="muted">your key is stored only on this device (localStorage). for a future hipaa‑aligned rollout, we can move this behind an azure proxy so keys never touch the browser.</p>
+
+    <div class="grid">
+      <div>
+        <label>provider</label>
+        <select id="aiProvider">
+          <option value="openai">openai (api.openai.com)</option>
+          <option value="azure">azure openai</option>
+        </select>
+      </div>
+      <div>
+        <label>model / deployment</label>
+        <input id="aiModel" type="text" placeholder="openai: gpt-4o-mini  |  azure: your-deployment-name">
+      </div>
+      <div>
+        <label>api key</label>
+        <input id="aiKey" type="text" placeholder="paste your api key">
+      </div>
+      <div>
+        <label>base url</label>
+        <input id="aiBaseUrl" type="text" placeholder="openai: https://api.openai.com  |  azure: https://YOUR-RESOURCE.openai.azure.com">
+      </div>
+      <div>
+        <label>azure api version (if azure)</label>
+        <input id="aiApiVersion" type="text" placeholder="e.g., 2024-02-15-preview">
+      </div>
+      <div>
+        <label>temperature</label>
+        <input id="aiTemp" type="number" min="0" max="1" step="0.1" value="0.2">
+      </div>
+    </div>
+
+    <div class="row" style="justify-content:space-between; margin-top:12px;">
+      <span class="muted">tip: do not share keys. copy them from your provider dashboard and paste here.</span>
+      <div class="right">
+        <button id="aiSave" class="small-btn">save</button>
+        <button id="aiClose" class="secondary small">close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ========== theme toggle ========== */
-document.getElementById("toggleTheme").onclick = function() {
+/* =========================
+   theme toggle
+========================= */
+document.getElementById("toggleTheme").onclick = () => {
   document.body.classList.toggle("dark");
 };
 
-/* ========== speech recognition (final results only; no repeats) ========== */
-let recognition;
-let autoRestartMic = false;
-
+/* =========================
+   speech recognition (final results only)
+========================= */
+let recognition, autoRestartMic = false;
 if ("webkitSpeechRecognition" in window) {
   recognition = new webkitSpeechRecognition();
-  recognition.continuous = true;
-  recognition.interimResults = true;
-
-  recognition.onresult = function(event) {
+  recognition.continuous = true; recognition.interimResults = true;
+  recognition.onresult = (event) => {
     let finalText = "";
     for (let i = event.resultIndex; i < event.results.length; i++) {
       if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
@@ -274,230 +260,159 @@ if ("webkitSpeechRecognition" in window) {
       input.value += (input.value ? " " : "") + finalText.toLowerCase();
     }
   };
-
-  recognition.onend = function() {
-    if (autoRestartMic) recognition.start();
-  };
+  recognition.onend = () => { if (autoRestartMic) recognition.start(); };
 }
-
-document.getElementById("startMic").onclick = function() {
-  if (recognition) {
-    autoRestartMic = true;
-    recognition.start();
-  } else {
-    alert("speech recognition not available in this browser.");
-  }
+document.getElementById("startMic").onclick = () => {
+  if (recognition) { autoRestartMic = true; recognition.start(); }
+  else { alert("speech recognition not available in this browser."); }
+};
+document.getElementById("stopMic").onclick = () => {
+  if (recognition) { autoRestartMic = false; recognition.stop(); }
 };
 
-document.getElementById("stopMic").onclick = function() {
-  if (recognition) {
-    autoRestartMic = false;
-    recognition.stop();
-  }
+/* =========================
+   input & clipboard
+========================= */
+document.getElementById("clearInput").onclick = () => { document.getElementById("inputText").value = ""; };
+document.getElementById("copyNote").onclick = () => {
+  const out = document.getElementById("outputText");
+  out.focus(); out.select();
+  try { document.execCommand("copy"); } catch (e) { navigator.clipboard.writeText(out.value); }
 };
+document.getElementById("clearOutput").onclick = () => { document.getElementById("outputText").value = ""; };
 
-/* ========== input controls ========== */
-document.getElementById("clearInput").onclick = function() {
-  document.getElementById("inputText").value = "";
-};
-
-/* ========== icd-10 favorites preload ========== */
+/* =========================
+   ICD favorites
+========================= */
 const icdList = [
-  "M54.2 cervicalgia",
-  "M25.511 pain in R shoulder",
-  "M25.512 pain in L shoulder",
-  "M79.10 myalgia, unspecified",
-  "M79.11 myalgia of mastication muscle",
-  "M79.12 myalgia of auxiliary muscles, head/neck",
-  "M79.18 myofascial pain",
-  "M54.6 pain in thoracic spine",
-  "M54.50 low back pain, unspecified",
-  "M54.51 vertebrogenic low back pain",
-  "M54.59 other low back pain",
-  "M25.551 pain in R hip",
-  "M25.552 pain in L hip",
-  "M25.561 pain in R knee",
-  "M25.562 pain in L knee",
-  "M25.571 pain in R ankle/foot",
-  "M25.572 pain in L ankle/foot",
-  "G47.00 insomnia, unspecified",
-  "G47.09 other insomnia",
-  "R14.0 abdominal distension",
-  "R14.1 gas pain",
-  "R14.2 eructation",
-  "R14.3 flatulence",
-  "R11.0 nausea",
-  "R11.2 nausea with vomiting",
-  "M25.521 pain in R elbow",
-  "M25.522 pain in L elbow",
+  "M54.2 cervicalgia","M25.511 pain in R shoulder","M25.512 pain in L shoulder",
+  "M79.10 myalgia, unspecified","M79.11 myalgia of mastication muscle","M79.12 myalgia of auxiliary muscles, head/neck","M79.18 myofascial pain",
+  "M54.6 pain in thoracic spine","M54.50 low back pain, unspecified","M54.51 vertebrogenic low back pain","M54.59 other low back pain",
+  "M25.551 pain in R hip","M25.552 pain in L hip","M25.561 pain in R knee","M25.562 pain in L knee",
+  "M25.571 pain in R ankle/foot","M25.572 pain in L ankle/foot",
+  "G47.00 insomnia, unspecified","G47.09 other insomnia",
+  "R14.0 abdominal distension","R14.1 gas pain","R14.2 eructation","R14.3 flatulence",
+  "R11.0 nausea","R11.2 nausea with vomiting",
+  "M25.521 pain in R elbow","M25.522 pain in L elbow",
   "G43.909 migraine, unsp, not intractable, w/o status migrainosus",
   "R51.9 headache, unspecified",
-  "M26.621 R TMJ pain",
-  "M26.622 L TMJ pain",
-  "M26.623 B TMJ pain",
-  "H93.11 tinnitus R",
-  "H93.12 tinnitus L",
-  "H93.13 tinnitus B"
+  "M26.621 R TMJ pain","M26.622 L TMJ pain","M26.623 B TMJ pain",
+  "H93.11 tinnitus R","H93.12 tinnitus L","H93.13 tinnitus B"
 ];
-
 const icdDropdown = document.getElementById("icdDropdown");
 icdList.forEach(code => {
   const opt = document.createElement("option");
-  opt.value = code;
-  opt.textContent = code;
-  icdDropdown.appendChild(opt);
+  opt.value = code; opt.textContent = code; icdDropdown.appendChild(opt);
 });
-
-document.getElementById("addICD").onclick = function() {
-  const code = icdDropdown.value;
-  const out = document.getElementById("outputText");
-  const prefix = out.value.trim().length ? "\n" : "";
-  out.value += prefix + "icd-10: " + code.toLowerCase();
+document.getElementById("addICD").onclick = () => {
+  const code = icdDropdown.value, out = document.getElementById("outputText");
+  out.value += (out.value.trim().length ? "\n" : "") + "icd-10: " + code.toLowerCase();
 };
 
-/* ========== quick modules ========== */
+/* =========================
+   quick modules
+========================= */
 const modules = {
   "stress": "general\n– increased stress\n– emotional tension\n",
   "sleep": "general\n– difficulty falling asleep or staying asleep\n",
   "knee pain baseline": "B knee\n– pain/tightness\n",
   "shoulder baseline": "R/L shoulder\n– pain/tightness\n"
 };
-
 const moduleButtons = document.getElementById("moduleButtons");
 const moduleDropdown = document.getElementById("moduleDropdown");
-
 for (const key in modules) {
-  let b = document.createElement("button");
-  b.className = "small-btn";
-  b.textContent = key;
-  b.onclick = function() {
-    document.getElementById("inputText").value += " " + modules[key];
-  };
+  const b = document.createElement("button");
+  b.className = "small-btn"; b.textContent = key;
+  b.onclick = () => { document.getElementById("inputText").value += " " + modules[key]; };
   moduleButtons.appendChild(b);
-
-  let opt = document.createElement("option");
-  opt.value = key;
-  opt.textContent = key;
-  moduleDropdown.appendChild(opt);
+  const opt = document.createElement("option");
+  opt.value = key; opt.textContent = key; moduleDropdown.appendChild(opt);
 }
-
-document.getElementById("insertModule").onclick = function() {
+document.getElementById("insertModule").onclick = () => {
   const val = moduleDropdown.value;
   document.getElementById("inputText").value += " " + modules[val];
 };
 
-/* ========== point combos (buttons + dropdown) with custom saving ========== */
+/* =========================
+   combos with custom saving
+========================= */
 let combos = {
-  "LV3 + LI4": "LV3, LI4",
-  "ST36 + SP6": "ST36, SP6",
-  "GB34 + GB41": "GB34, GB41",
-  "BL40 + KD3": "BL40, KD3",
-  "GV20 + yintang": "GV20, yintang"
+  "LV3 + LI4": "LV3, LI4","ST36 + SP6":"ST36, SP6","GB34 + GB41":"GB34, GB41","BL40 + KD3":"BL40, KD3","GV20 + yintang":"GV20, yintang"
 };
-
 const comboButtons = document.getElementById("comboButtons");
 const comboDropdown = document.getElementById("comboDropdown");
-
 function refreshCombos() {
-  comboButtons.innerHTML = "";
-  comboDropdown.innerHTML = "";
+  comboButtons.innerHTML = ""; comboDropdown.innerHTML = "";
   for (const key in combos) {
-    let b = document.createElement("button");
-    b.className = "small-btn";
-    b.textContent = key;
-    b.onclick = function() {
-      document.getElementById("inputText").value += " " + combos[key];
-    };
+    const b = document.createElement("button");
+    b.className = "small-btn"; b.textContent = key;
+    b.onclick = () => { document.getElementById("inputText").value += " " + combos[key]; };
     comboButtons.appendChild(b);
-
-    let opt = document.createElement("option");
-    opt.value = key;
-    opt.textContent = key;
-    comboDropdown.appendChild(opt);
+    const opt = document.createElement("option");
+    opt.value = key; opt.textContent = key; comboDropdown.appendChild(opt);
   }
 }
-
-document.getElementById("insertCombo").onclick = function() {
+document.getElementById("insertCombo").onclick = () => {
   const val = comboDropdown.value;
   document.getElementById("inputText").value += " " + combos[val];
 };
-
-document.getElementById("saveCombo").onclick = function() {
-  let name = document.getElementById("customComboName").value.trim();
-  let pts = document.getElementById("customComboPoints").value.trim();
+document.getElementById("saveCombo").onclick = () => {
+  const name = document.getElementById("customComboName").value.trim();
+  const pts = document.getElementById("customComboPoints").value.trim();
   if (!name || !pts) return;
-  combos[name] = pts;
-  localStorage.setItem("savedCombos", JSON.stringify(combos));
-  refreshCombos();
-  document.getElementById("customComboName").value = "";
-  document.getElementById("customComboPoints").value = "";
+  combos[name] = pts; localStorage.setItem("savedCombos", JSON.stringify(combos));
+  refreshCombos(); document.getElementById("customComboName").value = ""; document.getElementById("customComboPoints").value = "";
 };
-
-// restore saved combos
 const savedCombos = localStorage.getItem("savedCombos");
-if (savedCombos) {
-  try { combos = JSON.parse(savedCombos); } catch (e) {}
-}
+if (savedCombos) { try { combos = JSON.parse(savedCombos); } catch (e) {} }
 refreshCombos();
 
-/* ========== herbal recommendations (patent formulas) ========== */
+/* =========================
+   herbs (patent formulas only)
+========================= */
 let herbFormulas = {
-  "jia wei xiao yao wan": "stress/irritability with heat signs",
-  "xiao yao wan": "LV qi stagnation with SP deficiency",
-  "chai hu shu gan wan": "LV qi stagnation, hypochondriac distention, pain",
-  "shu jin wan": "sinew/blood stasis, pain and stiffness",
-  "du huo ji sheng wan": "chronic wind-cold-damp bi with deficiency",
-  "shen tong zhu yu wan": "blood stasis pain, fixed stabbing pain",
-  "juan bi wan": "wind-cold-damp bi with obstruction",
-  "yu ping feng wan": "wei qi support",
-  "gui pi wan": "SP qi + HT blood deficiency (fatigue, sleep)",
-  "tian wang bu xin dan": "HT/KD yin deficiency insomnia, palpitations",
-  "suan zao ren tang wan": "insomnia due to LV blood/yin deficiency",
-  "ban xia hou po wan": "plum-pit qi (phlegm + qi stagnation)",
-  "bao he wan": "food stagnation",
-  "zuo gui wan": "KD yin deficiency",
-  "you gui wan": "KD yang deficiency"
+  "jia wei xiao yao wan":"stress/irritability with heat signs",
+  "xiao yao wan":"lv qi stagnation with sp deficiency",
+  "chai hu shu gan wan":"lv qi stagnation, hypochondriac distention, pain",
+  "shu jin wan":"sinew/blood stasis, pain and stiffness",
+  "du huo ji sheng wan":"chronic wind-cold-damp bi with deficiency",
+  "shen tong zhu yu wan":"blood stasis pain, fixed stabbing pain",
+  "juan bi wan":"wind-cold-damp bi with obstruction",
+  "yu ping feng wan":"wei qi support",
+  "gui pi wan":"sp qi + ht blood deficiency (fatigue, sleep)",
+  "tian wang bu xin dan":"ht/kd yin deficiency insomnia, palpitations",
+  "suan zao ren tang wan":"insomnia due to lv blood/yin deficiency",
+  "ban xia hou po wan":"plum-pit qi (phlegm + qi stagnation)",
+  "bao he wan":"food stagnation",
+  "zuo gui wan":"kd yin deficiency",
+  "you gui wan":"kd yang deficiency"
 };
-
 const herbButtons = document.getElementById("herbButtons");
 const herbDropdown = document.getElementById("herbDropdown");
-
 function refreshHerbs() {
-  herbButtons.innerHTML = "";
-  herbDropdown.innerHTML = "";
+  herbButtons.innerHTML = ""; herbDropdown.innerHTML = "";
   for (const name in herbFormulas) {
     const b = document.createElement("button");
-    b.className = "small-btn";
-    b.textContent = name;
-    b.onclick = function() { addHerbToList(name, herbFormulas[name]); };
+    b.className = "small-btn"; b.textContent = name;
+    b.onclick = () => { addHerbToList(name, herbFormulas[name]); };
     herbButtons.appendChild(b);
-
     const opt = document.createElement("option");
-    opt.value = name;
-    opt.textContent = name;
-    herbDropdown.appendChild(opt);
+    opt.value = name; opt.textContent = name; herbDropdown.appendChild(opt);
   }
 }
-
 function addHerbToList(name, note) {
-  const key = "currentHerbs";
-  const existing = localStorage.getItem(key);
-  let arr = [];
-  if (existing) { try { arr = JSON.parse(existing) || []; } catch (e) { arr = []; } }
+  const key = "currentHerbs"; const existing = localStorage.getItem(key);
+  let arr = []; if (existing) { try { arr = JSON.parse(existing) || []; } catch(e) { arr = []; } }
   if (!arr.find(h => h.name === name)) {
-    arr.push({ name, note });
-    localStorage.setItem(key, JSON.stringify(arr));
+    arr.push({ name, note }); localStorage.setItem(key, JSON.stringify(arr));
   }
   const input = document.getElementById("inputText");
   input.value += ` herbal: ${name}${note ? " (" + note + ")" : ""}`;
 }
-
-document.getElementById("insertHerb").onclick = function() {
-  const name = herbDropdown.value;
-  addHerbToList(name, herbFormulas[name]);
+document.getElementById("insertHerb").onclick = () => {
+  const name = herbDropdown.value; addHerbToList(name, herbFormulas[name]);
 };
-
-document.getElementById("saveHerb").onclick = function() {
+document.getElementById("saveHerb").onclick = () => {
   const nm = document.getElementById("customHerbName").value.trim().toLowerCase();
   const nt = document.getElementById("customHerbNote").value.trim().toLowerCase();
   if (!nm) return;
@@ -507,223 +422,235 @@ document.getElementById("saveHerb").onclick = function() {
   document.getElementById("customHerbName").value = "";
   document.getElementById("customHerbNote").value = "";
 };
-
-// restore saved custom herbs
 const savedHerbs = localStorage.getItem("savedHerbs");
-if (savedHerbs) { try { herbFormulas = JSON.parse(savedHerbs); } catch (e) {} }
+if (savedHerbs) { try { herbFormulas = JSON.parse(savedHerbs); } catch(e) {} }
 refreshHerbs();
 
-/* ========== generate formatted note ========== */
-document.getElementById("generateNote").onclick = function() {
-  const t = (document.getElementById("inputText").value || "").toLowerCase().trim();
-
-  function has(str) { return t.includes(str); }
-
-  /* extract dictated points (lv3, li4, etc.) */
-  const pointRegex = /\b(lv|sp|gb|bl|ht|pc|kd|lu|st|si|li|cv|gv)\s*([0-9]{1,2})\b/gi;
-  let match, pointsFound = new Set();
-  while ((match = pointRegex.exec(t)) !== null) {
-    const ch = (match[1] || "").toUpperCase();
-    const num = match[2] || "";
-    pointsFound.add(ch + num);
-  }
-  if (has("yintang")) pointsFound.add("yintang");
-  if (has("taiyang")) pointsFound.add("taiyang");
-
-  /* hpi */
-  const hpi = [
-    "hpi:",
-    "– " + (t.slice(0, 180) || "no chief complaint captured")
-  ].join("\n");
-
-  /* subjective */
-  const subjSections = [];
-  function sectionFromTerms(header, terms) {
-    const lines = [];
-    terms.forEach(term => { if (has(term)) lines.push("– " + term); });
-    if (lines.length) return header + "\n" + lines.join("\n");
-    return "";
-  }
-  const subjRShoulder = sectionFromTerms("R shoulder", ["shoulder", "upper trap", "overhead", "tightness", "pain"]);
-  const subjLShoulder = sectionFromTerms("L shoulder", ["left shoulder", "upper trap", "overhead", "tightness", "pain"]);
-  const subjRKnee = sectionFromTerms("R knee", ["outer knee", "it band", "patellar", "running"]);
-  const subjLKnee = sectionFromTerms("L knee", ["outer knee", "it band", "patellar"]);
-  const subjBLegs = sectionFromTerms("B lower legs", ["peroneal", "calf", "fatigue", "no swelling"]);
-  const subjGeneral = sectionFromTerms("general", ["heat helps", "pool closed", "running more", "snow boots", "icy"]);
-
-  [subjRShoulder, subjLShoulder, subjRKnee, subjLKnee, subjBLegs, subjGeneral]
-    .filter(Boolean).forEach(s => subjSections.push(s));
-
-  const subjective = ["subjective:", subjSections.join("\n") || "general\n– no specific subjective items captured"].join("\n");
-
-  /* objective — palpation/tightness only */
-  const objSections = [];
-  const objRAdductorHam = sectionFromTerms("R adductor/hamstring", ["tightness", "tenderness", "taut band"]);
-  const objBITB = sectionFromTerms("B it band", ["tightness", "tenderness"]);
-  const objPeroneals = sectionFromTerms("B peroneals", ["tenderness", "tightness"]);
-  const objAchilles = sectionFromTerms("B achilles", ["residual tightness"]);
-  const objGeneral = "general\n– tissues warmer post-treatment\n– releases noted during session\n";
-  [objRAdductorHam, objBITB, objPeroneals, objAchilles, objGeneral].filter(Boolean).forEach(s => objSections.push(s));
-  const objective = ["objective:", objSections.join("\n")].join("\n");
-
-  /* tongue */
-  let tongue = "tongue:\nnot provided";
-
-  /* pulse — deduced if not supplied */
-  let pulse = "pulse:\ndeduced: wiry where there is stagnation; possible deficiency in SP/KD with fatigue findings.";
-
-  /* assessment with tcm dx */
-  const assessment = [
-    "assessment (including tcm diagnosis):",
-    "– biomechanical imbalance with compensation patterns",
-    "– it band/peroneal tightness contributing to lateral knee discomfort",
-    "– progress overall positive with remaining soft‑tissue restrictions",
-    "tcm diagnosis:",
-    "– LV qi stagnation affecting sinews",
-    "– qi + blood stagnation along GB/BL pathways",
-    "– SP qi deficiency contributing to fatigue"
-  ].join("\n");
-
-  /* treatment principle */
-  const treatmentPrinciple = [
-    "treatment principle:",
-    "– move LV qi; invigorate blood; open GB/BL channels",
-    "– tonify SP (and KD if indicated) to support muscles",
-    "– warm channels and dispel cold/damp as needed"
-  ].join("\n");
-
-  /* acupuncture plan — interventions only */
-  let pointsLine = "";
-  if (pointsFound.size > 0) {
-    const list = Array.from(pointsFound).map(p => /^[A-Z]{2}\d{1,2}$/.test(p) ? p : p.toLowerCase());
-    pointsLine = "– points used: " + Array.from(new Set(list)).join(", ");
-  }
-
-  const acupuncturePlan = [
-    "acupuncture plan:",
-    "acupuncture",
-    "– channels: LV, SP, GB, BL, ST as indicated; local ashi points",
-    (pointsLine || "– points used: as clinically indicated"),
-    "– motor point / trigger point release where indicated",
-    "adjunct therapies",
-    "– infrared: warm channels, move blood, dispel cold",
-    "– cupping: move blood, reduce stagnation",
-    "– guasha: release superficial stagnation, move lymph",
-    "– e-stim: relax sinews, reduce pain, increase circulation",
-    "– crystals (if used): amethyst (calming), citrine (grounding)"
-  ].join("\n");
-
-  /* herbs section */
-  const currentHerbsRaw = localStorage.getItem("currentHerbs");
-  let currentHerbsList = [];
-  if (currentHerbsRaw) { try { currentHerbsList = JSON.parse(currentHerbsRaw) || []; } catch (e) { currentHerbsList = []; } }
-  let herbLines = [];
-  if (currentHerbsList.length) {
-    currentHerbsList.forEach(h => {
-      herbLines.push("– " + (h.name || "").toLowerCase() + (h.note ? " — " + h.note.toLowerCase() : ""));
-    });
-  }
-  const herbsSection = [
-    "herbal recommendations (patent formulas):",
-    herbLines.length ? herbLines.join("\n") : "– none today"
-  ].join("\n");
-  localStorage.removeItem("currentHerbs");
-
-  /* advice */
-  const advice = [
-    "advice:",
-    "– home heat application, keep tissues covered in cold weather",
-    "– activity modification and pacing",
-    "– stretching/strengthening as appropriate",
-    "– monitor response and adjust running volume"
-  ].join("\n");
-
-  /* ICD-10 auto-suggest (3–4) */
-  function suggestICD(text) {
-    const picks = [];
-    const add = code => { if (code && !picks.includes(code)) picks.push(code); };
-    const hasRight = /\bright\b|\br\b/.test(" " + text + " ");
-    const hasLeft  = /\bleft\b|\bl\b/.test(" " + text + " ");
-
-    if (text.includes("neck")) add("M54.2 cervicalgia");
-    if (text.includes("thoracic") || text.includes("mid back")) add("M54.6 pain in thoracic spine");
-    if (text.includes("low back") || text.includes("lumbar")) add("M54.50 low back pain, unspecified");
-    if (text.includes("it band") || text.includes("knee")) {
-      if (hasRight) add("M25.561 pain in R knee");
-      if (hasLeft)  add("M25.562 pain in L knee");
-      if (!hasRight && !hasLeft) add("M25.569 pain in unspecified knee");
-    }
-    if (text.includes("shoulder")) {
-      if (hasRight) add("M25.511 pain in R shoulder");
-      if (hasLeft)  add("M25.512 pain in L shoulder");
-    }
-    if (text.includes("hip")) {
-      if (hasRight) add("M25.551 pain in R hip");
-      if (hasLeft)  add("M25.552 pain in L hip");
-    }
-    if (text.includes("ankle") || text.includes("foot")) {
-      if (hasRight) add("M25.571 pain in R ankle/foot");
-      if (hasLeft)  add("M25.572 pain in L ankle/foot");
-    }
-    if (text.includes("elbow")) {
-      if (hasRight) add("M25.521 pain in R elbow");
-      if (hasLeft)  add("M25.522 pain in L elbow");
-    }
-    if (text.includes("tmj") || text.includes("jaw")) {
-      if (hasRight) add("M26.621 R TMJ pain");
-      if (hasLeft)  add("M26.622 L TMJ pain");
-    }
-    if (text.includes("tinnitus")) {
-      if (hasRight) add("H93.11 tinnitus R");
-      if (hasLeft)  add("H93.12 tinnitus L");
-      if (!hasRight && !hasLeft) add("H93.13 tinnitus B");
-    }
-    if (text.includes("headache")) add("R51.9 headache, unspecified");
-    if (text.includes("migraine")) add("G43.909 migraine, unsp, not intractable, w/o status migrainosus");
-    if (text.includes("insomnia") || text.includes("sleep")) add("G47.00 insomnia, unspecified");
-    if (text.includes("nausea")) add("R11.0 nausea");
-    if (text.includes("gas") || text.includes("bloating") || text.includes("flatulence")) add("R14.3 flatulence");
-    if (text.includes("myofascial") || text.includes("myalgia") || text.includes("muscle pain")) add("M79.18 myofascial pain");
-
-    const generalPool = [
-      "M79.10 myalgia, unspecified",
-      "M79.18 myofascial pain",
-      "M54.50 low back pain, unspecified",
-      "M54.2 cervicalgia"
-    ];
-    for (const g of generalPool) { if (picks.length >= 4) break; add(g); }
-    return picks.slice(0, 4);
-  }
-
-  const icdSuggested = suggestICD(t).map(c => "– " + c.toLowerCase()).join("\n");
-  const icdSection = "icd-10 codes:\n" + (icdSuggested || "– to be added");
-
-  /* assemble */
-  const output = [
-    hpi, "", subjective, "", objective, "", tongue, "", pulse, "",
-    assessment, "", treatmentPrinciple, "", acupuncturePlan, "", herbsSection, "", advice, "", icdSection
-  ].join("\n");
-
-  document.getElementById("outputText").value = output;
-  localStorage.setItem("lastNote", output);
+/* =========================
+   AI settings (stored locally)
+========================= */
+const aiDefaults = {
+  provider: "openai",
+  baseUrl: "https://api.openai.com",
+  model: "gpt-4o-mini",
+  apiKey: "",
+  apiVersion: "2024-02-15-preview",
+  temperature: 0.2
+};
+function loadAIConfig(){
+  const raw = localStorage.getItem("aiConfig");
+  if (!raw) return {...aiDefaults};
+  try { return {...aiDefaults, ...JSON.parse(raw)}; } catch(e){ return {...aiDefaults}; }
+}
+function saveAIConfig(cfg){
+  localStorage.setItem("aiConfig", JSON.stringify(cfg));
+}
+const modalBackdrop = document.getElementById("aiModalBackdrop");
+document.getElementById("aiSettingsBtn").onclick = () => {
+  const cfg = loadAIConfig();
+  document.getElementById("aiProvider").value = cfg.provider;
+  document.getElementById("aiBaseUrl").value = cfg.baseUrl;
+  document.getElementById("aiModel").value = cfg.model;
+  document.getElementById("aiKey").value = cfg.apiKey;
+  document.getElementById("aiApiVersion").value = cfg.apiVersion;
+  document.getElementById("aiTemp").value = cfg.temperature;
+  modalBackdrop.style.display = "flex";
+};
+document.getElementById("aiClose").onclick = () => { modalBackdrop.style.display = "none"; };
+document.getElementById("aiSave").onclick = () => {
+  const cfg = {
+    provider: document.getElementById("aiProvider").value,
+    baseUrl: document.getElementById("aiBaseUrl").value.trim() || aiDefaults.baseUrl,
+    model: document.getElementById("aiModel").value.trim() || aiDefaults.model,
+    apiKey: document.getElementById("aiKey").value.trim(),
+    apiVersion: document.getElementById("aiApiVersion").value.trim() || aiDefaults.apiVersion,
+    temperature: parseFloat(document.getElementById("aiTemp").value) || aiDefaults.temperature
+  };
+  saveAIConfig(cfg);
+  modalBackdrop.style.display = "none";
 };
 
-/* duplicate last note */
-document.getElementById("duplicateLast").onclick = function() {
-  let last = localStorage.getItem("lastNote");
-  if (last) document.getElementById("outputText").value = last;
-};
-/* clear output */
-document.getElementById("clearOutput").onclick = function() {
-  document.getElementById("outputText").value = "";
-};
-/* copy to clipboard */
-document.getElementById("copyNote").onclick = function() {
+/* =========================
+   AI generate (manual—only when you click)
+========================= */
+document.getElementById("aiGenerate").onclick = async () => {
+  const transcript = (document.getElementById("inputText").value || "").trim();
+  if (!transcript) { alert("paste or dictate a transcript first."); return; }
+  const cfg = loadAIConfig();
+  if (!cfg.apiKey) { alert("open ai settings and paste your api key."); return; }
+
   const out = document.getElementById("outputText");
-  out.focus(); out.select();
-  try { document.execCommand("copy"); }
-  catch (e) { navigator.clipboard.writeText(out.value); }
+  out.value = "ai: generating note…";
+
+  try {
+    const json = await callAIForNote(cfg, transcript);
+    const note = renderNoteFromJSON(json);
+    out.value = note;
+    localStorage.setItem("lastNote", note);
+  } catch (e) {
+    out.value = "ai error: " + (e?.message || e);
+  }
 };
+
+function aiSystemPrompt(){
+  return [
+    "you are a tcm-savvy clinical scribe for an acupuncture practice.",
+    "output must be ALL LOWERCASE.",
+    "respect laterality abbreviations: use R, L, or B (e.g., R shoulder, L knee, B peroneals).",
+    "use abbreviated tcm meridian names: lv, sp, gb, bl, st, lu, li, si, ht, pc, kd, cv, gv.",
+    "NEVER use the term 'dry needling'.",
+    "herb_formulas must be PATENT FORMULAS ONLY (no raw decoctions).",
+    "if the transcript does not specify tongue or pulse, you MUST still provide them AS DEDUCED and clearly label them.",
+    "always infer points/plan from transcript context; keep interventions appropriate for acupuncture (no meds).",
+    "structure your output as STRICT JSON and nothing else, matching EXACTLY this schema:",
+    "{",
+    '  "hpi": "string (1-3 sentences, strictly based on transcript)",',
+    '  "subjective": { "sections": [ {"header":"string","bullets":["string","string"]} ] },',
+    '  "objective":  { "sections": [ {"header":"string","bullets":["string","string"]} ] },',
+    '  "tongue": "string (e.g., deduced: *description* if not explicitly provided)",',
+    '  "pulse":  "string (e.g., deduced: *description* if not explicitly provided)",',
+    '  "assessment": { "bullets":["string","string"], "tcm_dx":["string","string"] },',
+    '  "treatment_principle": ["string","string"],',
+    '  "acupuncture_plan": {',
+    '     "channels":"string (e.g., lv, sp, gb, bl, st; local ashi points)",',
+    '     "points_used":["string","string"],',
+    '     "interventions":["acupuncture","motor/trigger point release"],',
+    '     "adjuncts":["infrared","cupping","guasha","e-stim"]',
+    "  },",
+    '  "herb_formulas": ["string","string"],',
+    '  "advice": ["string","string"],',
+    '  "icd10": ["string","string","string","string"],',
+    '  "confidence": 0.0,',
+    '  "assumptions": ["string","string"]',
+    "}",
+    "— respond with ONLY the json, no prose."
+  ].join("\n");
+}
+
+async function callAIForNote(cfg, transcript){
+  const system = aiSystemPrompt();
+  const user = transcript;
+
+  let url = "", headers = {}, body = {};
+  const temperature = cfg.temperature ?? 0.2;
+
+  if (cfg.provider === "azure") {
+    // azure openai chat completions
+    const base = cfg.baseUrl.replace(/\/+$/,"");
+    url = `${base}/openai/deployments/${encodeURIComponent(cfg.model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion)}`;
+    headers = { "Content-Type":"application/json", "api-key": cfg.apiKey };
+    body = {
+      temperature,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ]
+    };
+  } else {
+    // openai (default)
+    const base = cfg.baseUrl.replace(/\/+$/,"");
+    url = `${base}/v1/chat/completions`;
+    headers = { "Content-Type":"application/json", "Authorization": `Bearer ${cfg.apiKey}` };
+    body = {
+      model: cfg.model,
+      temperature,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: system },
+        { role: "user", content: user }
+      ]
+    };
+  }
+
+  // WARNING: browser requests expose your key to this device.
+  const resp = await fetch(url, { method:"POST", headers, body: JSON.stringify(body) });
+  if (!resp.ok) {
+    const txt = await resp.text();
+    throw new Error(`api ${resp.status}: ${txt}`);
+  }
+  const data = await resp.json();
+
+  // normalize choices content
+  let content = "";
+  if (data.choices && data.choices[0]?.message?.content) {
+    content = data.choices[0].message.content;
+  } else if (data.choices && data.choices[0]?.text) {
+    content = data.choices[0].text;
+  } else {
+    throw new Error("no content in response");
+  }
+
+  // parse json
+  try {
+    const json = JSON.parse(content);
+    return json;
+  } catch(e) {
+    // sometimes the model wraps code fences; try to extract
+    const m = content.match(/\{[\s\S]*\}$/);
+    if (m) { return JSON.parse(m[0]); }
+    throw new Error("could not parse ai json");
+  }
+}
+
+function renderNoteFromJSON(j){
+  function bullets(arr){ return (arr||[]).map(s=>"– "+(s||"")).join("\n"); }
+  function sections(sec){
+    if(!sec||!sec.sections) return "";
+    return sec.sections.map(s=>{
+      const hdr=s.header||"";
+      const blt=bullets(s.bullets||[]);
+      return hdr + (blt?("\n"+blt):"");
+    }).join("\n");
+  }
+
+  const hpi = "hpi:\n– " + (j.hpi||"no chief complaint captured");
+  const subj = "subjective:\n" + (sections(j.subjective)||"general\n– no specific subjective items captured");
+  const obj  = "objective:\n" + (sections(j.objective)||"");
+
+  // always present; model should label "deduced" when absent in transcript
+  const tongue = "tongue:\n" + (j.tongue || "deduced: not specified");
+  const pulse  = "pulse:\n"  + (j.pulse  || "deduced: not specified");
+
+  const assess =
+    "assessment (including tcm diagnosis):\n" +
+    bullets(j.assessment?.bullets||[]) + "\n" +
+    "tcm diagnosis:\n" + bullets(j.assessment?.tcm_dx||[]);
+
+  const principle = "treatment principle:\n" + bullets(j.treatment_principle||[]);
+
+  const plan = (()=>{
+    const ch = j.acupuncture_plan?.channels || "lv, sp, gb, bl, st as indicated; local ashi points";
+    const pts = (j.acupuncture_plan?.points_used||[]).join(", ");
+    const ints = bullets(j.acupuncture_plan?.interventions||[]);
+    const adj  = bullets(j.acupuncture_plan?.adjuncts||[]);
+    return [
+      "acupuncture plan:",
+      "acupuncture",
+      "– channels: " + ch,
+      "– points used: " + (pts||"as clinically indicated"),
+      ints?ints:"",
+      "adjunct therapies",
+      adj?adj:""
+    ].filter(Boolean).join("\n");
+  })();
+
+  const herbs  = "herbal recommendations (patent formulas):\n" + (bullets(j.herb_formulas||[]) || "– none today");
+  const advice = "advice:\n" + bullets(j.advice||[]);
+  const icd    = "icd-10 codes:\n" + bullets(j.icd10||[]);
+
+  // confidence & assumptions
+  const confVal = (typeof j.confidence === "number" && isFinite(j.confidence)) ? j.confidence : null;
+  const confidenceLine = confVal!==null ? ("confidence & assumptions:\n– confidence: " + confVal.toFixed(2)) : "confidence & assumptions:";
+  const assumptions = bullets(j.assumptions||[]);
+  const confBlock = assumptions ? (confidenceLine + "\n" + assumptions) : confidenceLine;
+
+  return [
+    hpi, "", subj, "", obj, "", tongue, "", pulse, "",
+    assess, "", principle, "", plan, "", herbs, "", advice, "",
+    confBlock, "", icd
+  ].join("\n");
+}
 </script>
 
 </body>
