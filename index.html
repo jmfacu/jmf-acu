@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,8 +13,8 @@
   <meta name="theme-color" content="#4F3D5C">
 
   <!-- home‑screen icon (ensure icon-180.png sits next to index.html) -->
-  <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=6">
-  <link rel="icon" sizes="180x180" href="icon-180.png?v=6">
+  icon-180.png?v=8
+  icon-180.png?v=8
 
   <style>
   :root {
@@ -357,7 +358,8 @@ const icdList = [
   "M54.2 cervicalgia","M25.511 pain in R shoulder","M25.512 pain in L shoulder",
   "M79.10 myalgia, unspecified","M79.11 myalgia of mastication muscle","M79.12 myalgia of auxiliary muscles, head/neck","M79.18 myofascial pain",
   "M54.6 pain in thoracic spine","M54.50 low back pain, unspecified","M54.51 vertebrogenic low back pain","M54.59 other low back pain",
-  "M25.551 pain in R hip","M25.552 pain in L hip","M25.561 pain in R knee","M25.562 pain in L knee",
+  "M25.551 pain in R hip","M25.552 pain in L hip","M25.559 pain in unspecified hip",
+  "M25.561 pain in R knee","M25.562 pain in L knee",
   "M25.571 pain in R ankle/foot","M25.572 pain in L ankle/foot",
   "G47.00 insomnia, unspecified","G47.09 other insomnia",
   "R14.0 abdominal distension","R14.1 gas pain","R14.2 eructation","R14.3 flatulence",
@@ -552,7 +554,7 @@ document.getElementById("aiSave").onclick = () => {
   };
   saveAIConfig(cfg);
   aiModal.style.display = "none";
-  renderCostUI(); // refresh the visible numbers
+  renderCostUI();
 };
 
 /* ===== test AI button (tiny probe) ===== */
@@ -613,7 +615,6 @@ function currentCost(){
 }
 function renderCostUI(){
   const { dollars, inTok, outTok, cap, priceIn, priceOut } = currentCost();
-  const costCard = document.getElementById("costCard");
   const capText = document.getElementById("costCapText");
   const barFill = document.getElementById("costBarFill");
   const dollarsEl = document.getElementById("costDollars");
@@ -630,10 +631,6 @@ function renderCostUI(){
   outEl.textContent = `out: ${outTok.toLocaleString()} tok`;
 
   note.textContent = `pricing used: $${priceIn}/1m input, $${priceOut}/1m output (change in ai settings).`;
-
-  const strongWarn = (pct >= 80 && pct < 100);
-  const strongDanger = (pct >= 100);
-  capText.className = strongDanger ? "cost-nums cost-danger" : (strongWarn ? "cost-nums cost-warn" : "cost-nums");
 }
 renderCostUI();
 
@@ -677,11 +674,34 @@ function chunkTranscript(text){
   return chunks.filter(Boolean);
 }
 
+/* ===== normalizers: laterality & meridians ===== */
+function normalizeLateralityText(s){
+  if (!s) return s;
+  return s
+    .replace(/\bbilateral\b|\bboth\b/gi,'B')
+    .replace(/\bleft\b/gi,'L')
+    .replace(/\bright\b/gi,'R')
+    .replace(/\brt\b/gi,'R')
+    .replace(/\blt\b/gi,'L');
+}
+function uppercaseMeridians(s){
+  if (!s) return s;
+  const mer = ['lv','sp','gb','bl','st','lu','li','si','ht','pc','kd','cv','gv'];
+  mer.forEach(m=>{
+    const r1 = new RegExp(`\\b${m}\\b`,'gi');
+    s = s.replace(r1, m.toUpperCase());
+    const r2 = new RegExp(`\\b${m}\\s?(\\d+)`,'gi');
+    s = s.replace(r2, (_all, num)=> `${m.toUpperCase()}${num}`);
+  });
+  return s;
+}
+
+/* unified API caller with token estimation+retries */
 async function aiChat(cfg, messages){
   const base = (cfg.baseUrl || "https://api.openai.com").replace(/\/+$/,"");
   let url, headers, body;
 
-  const reqInTokens = estimateMessagesTokens(messages); // estimate prompt tokens
+  const reqInTokens = estimateMessagesTokens(messages);
 
   if (cfg.provider === "azure") {
     url = `${base}/openai/deployments/${encodeURIComponent(cfg.model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion)}`;
@@ -702,7 +722,7 @@ async function aiChat(cfg, messages){
       if (!content) throw new Error("no content in response");
 
       const outTok = charsToTokens(content);
-      addToMeter(reqInTokens, outTok); // update cost meter
+      addToMeter(reqInTokens, outTok);
 
       return content;
     }
@@ -727,64 +747,115 @@ async function aiChat(cfg, messages){
   throw new Error("api 429: still rate-limited after retries; wait a minute and try again.");
 }
 
+/* pass‑1: extract facts with explicit muscles/ROM */
 function pass1System(){
   return [
     "you are a careful tcm-intake extractor for an acupuncture clinic.",
     "task: read ONLY the provided transcript chunk and output STRICT JSON with facts (no rewriting, no opinions).",
-    "always use lowercase; laterality abbreviations r/l/b; tcm meridians abbreviated (lv, sp, gb, bl, st, lu, li, si, ht, pc, kd, cv, gv).",
-    "capture personal context if mentioned: job (occupation), family, upcoming travel or recent travel.",
+    "always use lowercase; laterality abbreviations r/l/b only;",
     "json schema:",
     "{",
     '  "hpi_bits": ["short phrases"],',
+    '  "body_regions": ["r hip","l shoulder","b low back"],',
+    '  "muscles": [ {"name":"gluteus medius","side":"r|l|b|","findings":["tight","tender","knots","adhesions","ropey"]} ],',
+    '  "rom": ["hip flexion limited ~20°","cervical rotation painful end-range"],',
+    '  "muscle_tests": ["hip abduction 4/5 r","empty can positive r"],',
     '  "subjective_sections": [ {"header":"string","bullets":["string","string"]} ],',
     '  "objective_sections":  [ {"header":"string","bullets":["string","string"]} ],',
     '  "explicit_tongue": "string or empty",',
     '  "explicit_pulse":  "string or empty",',
     '  "tcm_clues": ["lv qi stagnation","blood stasis","damp","heat","cold","deficiency","excess","wind","phlegm"],',
     '  "personal_context": ["job: …","family: …","travel: …"],',
-    '  "icd_candidates": ["m25.561 pain in r knee","m54.2 cervicalgia", "..."],',
-    '  "herb_candidates": ["jia wei xiao yao wan","du huo ji sheng wan", "..."]',
+    '  "icd_candidates": ["m25.551 r hip pain","m54.2 cervicalgia"],',
+    '  "herb_candidates": ["jia wei xiao yao wan"]',
     "}",
     "return only the json."
   ].join("\n");
 }
 
+/* pass‑2: final note with strict rules incl. herbs ALWAYS */
 function pass2System(){
   return [
     "you are a tcm-savvy clinical scribe for an acupuncture practice.",
     "use ALL extracted facts provided (array of chunk extracts) to write ONE consolidated note.",
     "rules:",
-    "- ALL LOWERCASE.",
-    "- use laterality abbreviations r, l, b.",
-    "- use abbreviated tcm meridians: lv, sp, gb, bl, st, lu, li, si, ht, pc, kd, cv, gv.",
-    "- never use the term 'dry needling'.",
-    "- herb formulas must be PATENT formulas only.",
+    "- ALL LOWERCASE for prose, but use R/L/B for laterality abbreviations.",
+    "- NEVER write the words 'left' or 'right' or 'bilateral'—use L, R, B only.",
+    "- use UPPERCASE tcm channel abbreviations and points (LV, SP, GB, BL, ST, LU, LI, SI, HT, PC, KD, CV, GV; e.g., LV3, GB34).",
+    "- objective MUST include muscles discussed (by name) with findings (tight/tender/knots/adhesions/ropey), plus any rom and muscle testing noted.",
     "- if tongue/pulse not explicit in extracts, DEDUCE them and label clearly as deduced.",
     "- include personal context (job, family, travel) if present.",
-    "output STRICT JSON with this schema:",
-    "{",
-    '  "hpi": "string (1–3 sentences strictly from extracts)",',
-    '  "subjective": { "sections": [ {"header":"string","bullets":["string","string"]} ] },',
-    '  "objective":  { "sections": [ {"header":"string","bullets":["string","string"]} ] },',
-    '  "personal_context": ["string","string"],',
-    '  "tongue": "string (explicit or deduced: …)",',
-    '  "pulse":  "string (explicit or deduced: …)",',
-    '  "assessment": { "bullets":["string","string"], "tcm_dx":["string","string"] },',
-    '  "treatment_principle": ["string","string"],',
-    '  "acupuncture_plan": {',
-    '     "channels":"string",',
-    '     "points_used":["string","string"],',
-    '     "interventions":["acupuncture","motor/trigger point release"],',
-    '     "adjuncts":["infrared","cupping","guasha","e-stim"]',
-    "  },",
-    '  "herb_formulas": ["string","string"],',
-    '  "advice": ["string","string"],',
-    '  "icd10": ["string","string","string","string"],',
-    '  "confidence": 0.0,',
-    '  "assumptions": ["string","string"]',
-    "}",
+    "- assessment bullets should include biomedical descriptors when appropriate (e.g., myofascial pain syndrome, repetitive strain injury) alongside tcm.",
+    "- tcm diagnosis must use typical textbook patterns (e.g., lv qi stagnation, blood stasis in the channels, kd yin deficiency, shen disturbance), informed by standard texts such as 'chinese acupuncture and moxibustion' and bensky’s references.",
+    "- herbal recommendations are REQUIRED in all cases: choose 1–2 appropriate PATENT formulas based on the case (e.g., formulas commonly aligned with the diagnosed tcm pattern per bensky/cam). do not leave this empty.",
+    "- icd10: choose 3–4 codes that reflect the main complaints mentioned; if hip pain appears, include the appropriate hip pain code with correct laterality if known.",
+    "- confidence: provide a realistic value between 0.55 and 0.9 (never 0).",
+    'output STRICT JSON with this schema:\n{\n  "hpi": "string (1–3 sentences strictly from extracts)",\n  "subjective": { "sections": [ {"header":"string","bullets":["string","string"]} ] },\n  "objective":  { "sections": [ {"header":"muscles","bullets":["r gluteus medius: tight/tender","l piriformis: knots"]}, {"header":"rom","bullets":["hip flexion limited ~20°"]}, {"header":"muscle testing","bullets":["hip abd 4/5 r"]} ] },\n  "personal_context": ["string","string"],\n  "tongue": "string (explicit or deduced: …)",\n  "pulse":  "string (explicit or deduced: …)",\n  "assessment": { "bullets":["string","string"], "tcm_dx":["string","string"] },\n  "treatment_principle": ["string","string"],\n  "acupuncture_plan": {\n     "channels":"string",\n     "points_used":["string","string"],\n     "interventions":["acupuncture","motor/trigger point release"],\n     "adjuncts":["infrared","cupping","guasha","e-stim"]\n  },\n  "herb_formulas": ["string","string"],\n  "advice": ["string","string"],\n  "icd10": ["string","string","string","string"],\n  "confidence": 0.0,\n  "assumptions": ["string","string"]\n}\n',
     "respond with ONLY the json."
   ].join("\n");
+}
+
+/* ===== herb fallback mapping (if model forgets) ===== */
+function herbFallbackFromTCM(tcmDxArr){
+  try{
+    const text = (tcmDxArr||[]).join('; ').toLowerCase();
+    const picks = [];
+    const push = (x)=>{ if (x && !picks.includes(x)) picks.push(x); };
+    if (/\blv\b|liver qi stag|qi stagnation/.test(text)) {
+      if (/heat|irrit/.test(text)) push('jia wei xiao yao wan');
+      else push('xiao yao wan');
+      push('chai hu shu gan wan');
+    }
+    if (/blood stasis|stasis in the channel|fixed stabbing pain/.test(text)) {
+      push('shen tong zhu yu wan');
+    }
+    if (/wind|cold|damp/.test(text) && /bi/.test(text)) {
+      push('du huo ji sheng wan');
+      push('juan bi wan');
+    }
+    if (/kd yin def|kidney yin def|yin deficiency/.test(text)) {
+      push('zuo gui wan');
+      push('tian wang bu xin dan');
+    }
+    if (/shen disturbance|insomnia|palpitations/.test(text)) {
+      push('tian wang bu xin dan');
+      push('suan zao ren tang wan');
+    }
+    if (/sp qi def|spleen qi def|fatigue|poor appetite/.test(text)) {
+      push('gui pi wan');
+    }
+    if (/wei qi def|recurrent colds|allergy/.test(text)) {
+      push('yu ping feng wan');
+    }
+    if (/phlegm|plum[- ]?pit|qi stagnation with phlegm/.test(text)) {
+      push('ban xia hou po wan');
+    }
+    if (/food stagnation/.test(text)) {
+      push('bao he wan');
+    }
+    return picks.slice(0,2);
+  }catch(e){ return []; }
+}
+
+/* ===== rendering & integrity helpers ===== */
+function coerceConfidence(val){
+  if (typeof val !== 'number' || !isFinite(val)) return 0.66;
+  if (val < 0.55) return 0.66;
+  if (val > 0.95) return 0.95;
+  return val;
+}
+
+function ensureHipICD(extList, icdArr){
+  try{
+    const text = JSON.stringify(extList).toLowerCase();
+    if (!text.includes('hip')) return icdArr;
+    const hasHipCode = (icdArr||[]).some(x=>/m25\.55[129]/i.test(x));
+    if (hasHipCode) return icdArr;
+    let code = 'M25.559 pain in unspecified hip';
+    if (/(r\s?hip|right hip)/i.test(text)) code = 'M25.551 pain in R hip';
+    else if (/(l\s?hip|left hip)/i.test(text)) code = 'M25.552 pain in L hip';
+    return [...(icdArr||[]), code.toLowerCase()];
+  }catch(e){ return icdArr; }
 }
 
 function renderNoteFromJSON(j){
@@ -792,39 +863,43 @@ function renderNoteFromJSON(j){
   function sections(sec){
     if(!sec||!sec.sections) return "";
     return sec.sections.map(s=>{
-      const hdr=s.header||"";
-      const blt=bullets(s.bullets||[]);
+      let hdr=s.header||"";
+      let blt=bullets(s.bullets||[]);
+      hdr = normalizeLateralityText(hdr); blt = normalizeLateralityText(blt);
+      hdr = uppercaseMeridians(hdr); blt = uppercaseMeridians(blt);
       return hdr + (blt?("\n"+blt):"");
     }).join("\n");
   }
 
-  const hpi = "hpi:\n– " + (j.hpi||"no chief complaint captured");
+  const norm = (s)=> uppercaseMeridians(normalizeLateralityText(s||""));
+
+  const hpi = "hpi:\n– " + norm(j.hpi||"no chief complaint captured");
   const subj = "subjective:\n" + (sections(j.subjective)||"general\n– no specific subjective items captured");
   const obj  = "objective:\n" + (sections(j.objective)||"");
 
   const pc   = j.personal_context && j.personal_context.length
-    ? "personal context:\n" + bullets(j.personal_context)
+    ? "personal context:\n" + bullets((j.personal_context||[]).map(norm))
     : "";
 
-  const tongue = "tongue:\n" + (j.tongue || "deduced: not specified");
-  const pulse  = "pulse:\n"  + (j.pulse  || "deduced: not specified");
+  const tongue = "tongue:\n" + norm(j.tongue || "deduced: not specified");
+  const pulse  = "pulse:\n"  + norm(j.pulse  || "deduced: not specified");
 
   const assess =
     "assessment (including tcm diagnosis):\n" +
-    bullets(j.assessment?.bullets||[]) + "\n" +
-    "tcm diagnosis:\n" + bullets(j.assessment?.tcm_dx||[]);
+    bullets((j.assessment?.bullets||[]).map(norm)) + "\n" +
+    "tcm diagnosis:\n" + bullets((j.assessment?.tcm_dx||[]).map(norm));
 
-  const principle = "treatment principle:\n" + bullets(j.treatment_principle||[]);
+  const principle = "treatment principle:\n" + bullets((j.treatment_principle||[]).map(norm));
 
   const plan = (()=>{
-    const ch = j.acupuncture_plan?.channels || "lv, sp, gb, bl, st as indicated; local ashi points";
-    const pts = (j.acupuncture_plan?.points_used||[]).join(", ");
-    const ints = bullets(j.acupuncture_plan?.interventions||[]);
-    const adj  = bullets(j.acupuncture_plan?.adjuncts||[]);
+    const ch = norm(j.acupuncture_plan?.channels || "LV, SP, GB, BL, ST as indicated; local ashi points");
+    const pts = (j.acupuncture_plan?.points_used||[]).map(norm).join(", ");
+    const ints = bullets((j.acupuncture_plan?.interventions||[]).map(norm));
+    const adj  = bullets((j.acupuncture_plan?.adjuncts||[]).map(norm));
     return [
       "acupuncture plan:",
       "acupuncture",
-      "– channels: " + ch,
+      "– channels: " + (ch||"LV, SP, GB, BL, ST; local ashi"),
       "– points used: " + (pts||"as clinically indicated"),
       ints?ints:"",
       "adjunct therapies",
@@ -832,22 +907,42 @@ function renderNoteFromJSON(j){
     ].filter(Boolean).join("\n");
   })();
 
-  const herbs  = "herbal recommendations (patent formulas):\n" + (bullets(j.herb_formulas||[]) || "– none today");
-  const advice = "advice:\n" + bullets(j.advice||[]);
-  const icd    = "icd-10 codes:\n" + bullets(j.icd10||[]);
+  // herbs: always include at least one (fallback if model leaves empty)
+  let herbsArr = (j.herb_formulas||[]).map(norm).filter(x=>x && x.trim());
+  if (!herbsArr.length){
+    herbsArr = herbFallbackFromTCM(j.assessment?.tcm_dx||[]);
+  }
+  if (!herbsArr.length){
+    herbsArr = ['shen tong zhu yu wan'];
+  }
+  const herbs  = "herbal recommendations (patent formulas):\n" + bullets(herbsArr);
 
-  const confVal = (typeof j.confidence === "number" && isFinite(j.confidence)) ? j.confidence : null;
-  const confidenceLine = confVal!==null ? ("confidence & assumptions:\n– confidence: " + confVal.toFixed(2)) : "confidence & assumptions:";
-  const assumptions = bullets(j.assumptions||[]);
+  const advice = "advice:\n" + bullets((j.advice||[]).map(norm));
+
+  const confVal = coerceConfidence(j.confidence);
+  const confidenceLine = "confidence & assumptions:\n– confidence: " + confVal.toFixed(2);
+  const assumptions = bullets((j.assumptions||[]).map(norm));
   const confBlock = assumptions ? (confidenceLine + "\n" + assumptions) : confidenceLine;
 
-  return [
+  // keep L/R/B capitalization in ICDs; also ensure hip code integrity
+  let icdArr = (j.icd10||[]).map(x => normalizeLateralityText(x||""));
+  if (window.__extListForICD) {
+    icdArr = ensureHipICD(window.__extListForICD, icdArr);
+  }
+  const icd    = icdArr && icdArr.length ? ("icd-10 codes:\n" + bullets(icdArr)) : "";
+
+  const note = [
     hpi, "", subj, "", obj, "",
     pc ? pc + "\n" : "",
     tongue, "", pulse, "",
-    assess, "", principle, "", plan, "", herbs, "", advice, "",
-    confBlock, "", icd
+    assess, "", principle, "", plan, "",
+    herbs, "", advice, "",
+    confBlock, "",
+    icd
   ].join("\n");
+
+  // final polish over entire note to enforce L/R/B and LV/KD/GB etc.
+  return uppercaseMeridians(normalizeLateralityText(note));
 }
 
 /* ===== two‑pass driver ===== */
@@ -901,6 +996,10 @@ document.getElementById("aiGenerate").onclick = async () => {
       extList.push(json);
     }
 
+    // expose extracts for ICD integrity
+    window.__extListForICD = extList;
+
+    // pass‑1 preview
     const preview = document.getElementById("pass1Preview");
     const previewBox = document.getElementById("pass1Text");
     const outline = [];
@@ -912,16 +1011,22 @@ document.getElementById("aiGenerate").onclick = async () => {
       }
     };
 
-    const pcAll = [], hpiBitsAll = [], tcmAll = [], icdAll = [], herbsAll = [];
+    const pcAll = [], hpiBitsAll = [], tcmAll = [], icdAll = [], herbsAll = [], musclesAll = [], romAll=[], testsAll=[];
     extList.forEach(e=>{
       (e.personal_context||[]).forEach(s=> pcAll.push(s));
       (e.hpi_bits||[]).forEach(s=> hpiBitsAll.push(s));
       (e.tcm_clues||[]).forEach(s=> tcmAll.push(s));
       (e.icd_candidates||[]).forEach(s=> icdAll.push(s));
       (e.herb_candidates||[]).forEach(s=> herbsAll.push(s));
+      (e.muscles||[]).forEach(m=> musclesAll.push(`${m.side||''} ${m.name||''}: ${(m.findings||[]).join('/')}`.trim()));
+      (e.rom||[]).forEach(r=> romAll.push(r));
+      (e.muscle_tests||[]).forEach(r=> testsAll.push(r));
     });
 
     addLines("hpi highlights", hpiBitsAll);
+    addLines("muscles (raw)", musclesAll);
+    addLines("rom (raw)", romAll);
+    addLines("muscle tests (raw)", testsAll);
     addLines("personal context", pcAll);
     addLines("tcm clues", tcmAll);
     addLines("icd candidates", icdAll);
@@ -930,6 +1035,7 @@ document.getElementById("aiGenerate").onclick = async () => {
     previewBox.value = outline.join("\n").trim() || "(no preview items extracted)";
     preview.style.display = "block";
 
+    // pass 2
     tpStep.textContent = "pass 2 of 2 — drafting final note…";
     tpProg.style.width = "90%";
     tpLog.textContent += "\nconsolidating all extracts into a single structured note…";
@@ -949,9 +1055,11 @@ document.getElementById("aiGenerate").onclick = async () => {
       if (m2) finalJson = JSON.parse(m2[0]); else throw new Error("could not parse pass‑2 json");
     }
 
-    const note = renderNoteFromJSON(finalJson);
-    document.getElementById("outputText").value = note;
-    localStorage.setItem("lastNote", note);
+    finalJson.confidence = coerceConfidence(finalJson.confidence);
+
+    const finalNote = renderNoteFromJSON(finalJson);
+    document.getElementById("outputText").value = finalNote;
+    localStorage.setItem("lastNote", finalNote);
 
     tpProg.style.width = "100%";
     tpStep.textContent = "done";
