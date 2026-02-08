@@ -14,27 +14,16 @@
 
   <!-- home-screen icons (ensure icon-180.png sits next to index.html) -->
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=8" />
-  <link rel="icon" href="icon-180.png?v=8" />
+  <link rel="icon" sizes="180x180" href="icon-180.png?v=8" />
 
   <style>
   :root {
-    --bg: #ffffff;
-    --text: #444444;
-    --muted: #666666;
-
-    --card-bg: #ffffff;
-    --border: #e5e7eb;
-
-    --accent: #4F3D5C;      /* purple */
-    --accent-text: #ffffff;
-    --accent-green: #BADA55; /* green */
-
-    --secondary: #666666;
-    --danger: #4F3D5C;
-
+    --bg: #ffffff; --text: #444444; --muted: #666666;
+    --card-bg: #ffffff; --border: #e5e7eb;
+    --accent: #4F3D5C; --accent-text: #ffffff; --accent-green: #BADA55;
+    --secondary: #666666; --danger: #4F3D5C;
     --font-heading: "Avenir Next", Avenir, -apple-system, system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
     --font-body:    "Avenir Next", Avenir, -apple-system, system-ui, "Helvetica Neue", Helvetica, Arial, sans-serif;
-
     --radius: 12px;
   }
   .dark {
@@ -45,11 +34,8 @@
   }
 
   * { box-sizing: border-box; }
-  body {
-    margin:0; padding:0; background:var(--bg); color:var(--text);
-    font-family:var(--font-body); font-weight:300;
-    -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
-  }
+  body { margin:0; padding:0; background:var(--bg); color:var(--text);
+    font-family:var(--font-body); font-weight:300; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
   .container { padding:16px; max-width:1100px; margin:0 auto; }
   .header { display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:8px; }
 
@@ -80,45 +66,17 @@
   button:hover { filter:brightness(0.98); } button:active { transform:translateY(1px); }
   select:focus, textarea:focus, input[type="text"]:focus { outline:2px solid rgba(186,218,85,0.45); border-color:var(--accent-green); }
 
-  .brand-btn {
-    display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+  .brand-btn { display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
     width:84px; height:84px; padding:0; background:var(--accent); color:#fff; border-radius:18px;
-    line-height:1.05; text-transform:lowercase; font-family:var(--font-heading); font-weight:600;
-  }
+    line-height:1.05; text-transform:lowercase; font-family:var(--font-heading); font-weight:600; }
   .brand-btn span { display:block; font-size:22px; letter-spacing:0.5px; }
-  #toggleTheme.small { padding:8px 10px; font-size:14px; border-radius:10px; }
-  .chip { padding:6px 10px; border-radius:999px; background:#F3F8DB; border:1px solid #CFE78E; color:var(--text); font-weight:400; }
 
-  /* ===== two-pass progress modal ===== */
-  .modal-backdrop {
-    display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999;
-    align-items:center; justify-content:center; padding:16px;
-  }
-  .modal {
-    width:100%; max-width:720px; background:var(--card-bg); color:var(--text);
-    border:1px solid var(--border); border-radius:16px; padding:16px;
-  }
+  /* modal+progress */
+  .modal-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:9999; align-items:center; justify-content:center; padding:16px; }
+  .modal { width:100%; max-width:720px; background:var(--card-bg); color:var(--text); border:1px solid var(--border); border-radius:16px; padding:16px; }
   .progress-bar { height:10px; width:100%; background:#eee; border-radius:999px; overflow:hidden; margin:8px 0 12px; }
   .progress-bar > div { height:100%; width:0%; background:var(--accent-green); transition:width .25s ease; }
   .log { max-height:140px; overflow:auto; background:#fafafa; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:13px; }
-
-  /* ===== pass-1 preview panel ===== */
-  .preview { margin-top:12px; padding:12px; border:1px solid var(--border); border-radius:12px; background:#fdfdfd; }
-  .preview h3 { margin:0 0 8px; font-size:18px; color:var(--accent); }
-  .preview textarea { height:160px; white-space:pre-wrap; }
-
-  /* ===== cost meter (card) ===== */
-  .cost-card {
-    display:flex; flex-direction:column; gap:6px;
-    min-width:280px; max-width:420px;
-    background:#fafafa; border:1px solid var(--border); border-radius:12px; padding:10px 12px;
-  }
-  .cost-header { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-  .cost-nums { font-size:12px; color:var(--muted); }
-  .cost-strong { font-weight:600; color:var(--text); }
-  .cost-bar { height:8px; width:100%; background:#eee; border-radius:999px; overflow:hidden; }
-  .cost-bar > div { height:100%; width:0%; background:#BADA55; transition:width .25s ease; }
-  .cost-note { font-size:11px; color:var(--muted); }
   </style>
 </head>
 <body>
@@ -128,24 +86,24 @@
     <div style="display:flex; align-items:center; gap:12px;">
       <button class="brand-btn" aria-label="jmf acu"><span>jmf</span><span>acu</span></button>
       <div>
-        <h1>jmf acu</h1>
+        <h1>jmf acu <span style="font-size:12px; color:#999; font-weight:400">• build: 2026‑02‑01‑8</span></h1>
         <div class="notice">local ui. you control ai usage. (speech requires internet.)</div>
       </div>
     </div>
 
     <!-- cost meter card -->
     <div class="cost-card" id="costCard">
-      <div class="cost-header">
+      <div class="header" style="display:flex; align-items:center; justify-content:space-between; gap:8px; margin:0;">
         <div style="font-size:14px; font-weight:600; color:var(--accent);">estimated cost (this month)</div>
-        <div class="cost-nums" id="costCapText">$0 / $15</div>
+        <div class="notice" id="costCapText">$0 / $15</div>
       </div>
-      <div class="cost-bar"><div id="costBarFill"></div></div>
+      <div class="progress-bar"><div id="costBarFill"></div></div>
       <div class="flex-row" style="gap:6px;">
         <span class="pill" id="costDollars">$0.00</span>
         <span class="pill" id="costTokensIn">in: 0 tok</span>
         <span class="pill" id="costTokensOut">out: 0 tok</span>
       </div>
-      <div class="cost-note" id="costNote">pricing used: $0.15/1m input, $0.60/1m output (change in ai settings).</div>
+      <div class="notice" id="costNote">pricing used: $0.15/1m input, $0.60/1m output (change in ai settings).</div>
     </div>
 
     <div class="flex-row" style="gap:6px;">
@@ -160,6 +118,7 @@
     <button id="startMic">🎤 start dictation</button>
     <button id="stopMic" class="secondary">stop dictation</button>
     <button id="clearInput" class="danger">clear input</button>
+    <button id="pasteDemo" class="small-btn">paste test text</button>
   </div>
 
   <div class="section-title">ai generation (two‑pass)</div>
@@ -167,7 +126,7 @@
     <button id="aiGenerate">ai generate note</button>
     <button id="duplicateLast" class="secondary">duplicate last</button>
   </div>
-  <div class="notice">pass 1 extracts facts (with preview); pass 2 writes the final note.</div>
+  <div class="notice">pass 1 extracts facts (with preview); pass 2 writes the final note (with fallback if needed).</div>
 
   <div class="preview" id="pass1Preview" style="display:none;">
     <h3>ai summary preview (from pass 1)</h3>
@@ -225,7 +184,7 @@
   </div>
 
   <hr>
-  <div class="notice">tip: add this page to your ipad home screen from safari → share → add to home screen.</div>
+  <div class="notice">after any update: open with a fresh token (e.g., <code>?v=build-2026-02-01-8</code>) and re‑add to home screen.</div>
 </div>
 
 <!-- two-pass progress modal -->
@@ -245,7 +204,7 @@
 <div id="aiModalBackdrop" class="modal-backdrop">
   <div class="modal">
     <h2>ai settings</h2>
-    <p class="notice">your key is stored only on this device (localStorage). set a monthly cap here for the in‑app meter.</p>
+    <p class="notice">your key is stored only on this device (localStorage). test before using.</p>
 
     <div class="grid">
       <div>
@@ -277,7 +236,7 @@
       </div>
 
       <div>
-        <label>monthly cap ($) — in‑app meter</label>
+        <label>monthly cap ($)</label>
         <input id="aiCap" type="number" min="0" step="1" value="15">
       </div>
       <div>
@@ -291,7 +250,7 @@
     </div>
 
     <div class="flex-row" style="justify-content:space-between; margin-top:12px;">
-      <span class="notice">set your dashboard hard cap too (e.g., $15). this meter is an estimate.</span>
+      <span class="notice">set an OpenAI dashboard hard cap too (e.g., $15). this is an estimate.</span>
       <div class="flex-row" style="gap:6px;">
         <button id="aiTest" class="small-btn">test ai</button>
         <button id="aiSave" class="small-btn">save</button>
@@ -303,7 +262,7 @@
 
 <script>
 /* =========================
-   small helpers & element refs
+   element refs & theme
 ========================= */
 const inputEl   = document.getElementById("inputText");
 const outputEl  = document.getElementById("outputText");
@@ -312,7 +271,7 @@ const p1TextEl  = document.getElementById("pass1Text");
 document.getElementById("toggleTheme").onclick = () => { document.body.classList.toggle("dark"); };
 
 /* =========================
-   speech recognition (final results only)
+   speech recognition
 ========================= */
 let recognition, autoRestartMic = false;
 if ("webkitSpeechRecognition" in window) {
@@ -360,6 +319,29 @@ document.getElementById("clearAll").onclick = () => {
   try { localStorage.removeItem("lastNote"); } catch(e){}
   try { window.__extListForICD = null; } catch(e){}
 };
+document.getElementById("pasteDemo").onclick = () => {
+  inputEl.value = `hpi: 3 weeks of right buttock pain after sitting; bilateral knee soreness after long walks.
+
+subjective:
+– right buttock pain 5/10; tightness
+– bilateral knee soreness 3/10
+
+objective:
+– r piriformis tender/knots; r gluteus medius tight
+– l gluteus medius mild tightness
+rom:
+– r hip flexion limited ~15°; pain at end range
+muscle testing:
+– r hip abduction 4/5; l 5/5
+
+tcm clues:
+– liver qi stagnation; blood stasis in the channel
+
+personal:
+– desk job; long commute
+
+points mentioned by clinician: lv3, gb34, kd3, ashi r piriformis`;
+};
 
 /* =========================
    ICD favorites & add
@@ -372,17 +354,14 @@ const icdList = [
   "R51.9 headache, unspecified"
 ];
 const icdDropdown = document.getElementById("icdDropdown");
-icdList.forEach(code => {
-  const opt = document.createElement("option");
-  opt.value = code; opt.textContent = code; icdDropdown.appendChild(opt);
-});
+icdList.forEach(code => { const opt = document.createElement("option"); opt.value = code; opt.textContent = code; icdDropdown.appendChild(opt); });
 document.getElementById("addICD").onclick = () => {
   const code = icdDropdown.value;
   outputEl.value += (outputEl.value.trim().length ? "\n" : "") + "icd-10: " + normalizeLateralityText(code);
 };
 
 /* =========================
-   quick modules & combos & herbs
+   quick modules / combos / herbs
 ========================= */
 const modules = {
   "stress": "general\n– increased stress\n– emotional tension\n",
@@ -474,18 +453,10 @@ refreshHerbs();
 /* =========================
    AI settings + cost meter
 ========================= */
-const aiDefaults = {
-  provider: "openai",
-  baseUrl: "https://api.openai.com",
-  model: "gpt-4o-mini",
-  apiKey: "",
-  apiVersion: "2024-02-15-preview",
-  temperature: 0.2,
-  monthlyCap: 15, priceIn: 0.15, priceOut: 0.60
-};
-function loadAIConfig(){ const raw = localStorage.getItem("aiConfig"); if (!raw) return {...aiDefaults};
-  try { return {...aiDefaults, ...JSON.parse(raw)}; } catch(e){ return {...aiDefaults}; } }
+const aiDefaults = { provider:"openai", baseUrl:"https://api.openai.com", model:"gpt-4o-mini", apiKey:"", apiVersion:"2024-02-15-preview", temperature:0.2, monthlyCap:15, priceIn:0.15, priceOut:0.60 };
+function loadAIConfig(){ const raw = localStorage.getItem("aiConfig"); if (!raw) return {...aiDefaults}; try { return {...aiDefaults, ...JSON.parse(raw)}; } catch(e){ return {...aiDefaults}; } }
 function saveAIConfig(cfg){ localStorage.setItem("aiConfig", JSON.stringify(cfg)); }
+
 document.getElementById("aiSettingsBtn").onclick = () => {
   const cfg = loadAIConfig();
   document.getElementById("aiProvider").value = cfg.provider;
@@ -512,7 +483,9 @@ document.getElementById("aiSave").onclick = () => {
     priceIn: Math.max(0, parseFloat(document.getElementById("aiPriceIn").value) || aiDefaults.priceIn),
     priceOut: Math.max(0, parseFloat(document.getElementById("aiPriceOut").value) || aiDefaults.priceOut)
   };
-  saveAIConfig(cfg); document.getElementById("aiModalBackdrop").style.display = "none"; renderCostUI();
+  saveAIConfig(cfg);
+  document.getElementById("aiModalBackdrop").style.display = "none";
+  renderCostUI();
 };
 document.getElementById("aiTest").onclick = async () => {
   const cfg = loadAIConfig(); if (!cfg.apiKey){ alert("paste your api key first."); return; }
@@ -555,13 +528,9 @@ function renderCostUI(){
 renderCostUI();
 
 /* =========================
-   two-pass generation core
+   core helpers (chunking)
 ========================= */
 const CHUNK_CHARS = 8000; const CHUNK_OVERLAP = 800; const MAX_TRIES = 3;
-const tpModal = document.getElementById('tpModal'); const tpProg = document.getElementById('tpProg');
-const tpStep = document.getElementById('tpStep'); const tpLog  = document.getElementById('tpLog');
-document.getElementById('tpClose').onclick = ()=> tpModal.style.display = 'none';
-
 function chunkTranscript(text){
   const chunks = []; let i = 0;
   while (i < text.length) {
@@ -569,47 +538,43 @@ function chunkTranscript(text){
     const chunk = text.slice(i, end);
     chunks.push(chunk.trim());
     if (end >= text.length) break;
-    i = end - CHUNK_OVERLAP;
-    if (i < 0) i = 0;
+    i = end - CHUNK_OVERLAP; if (i < 0) i = 0;
   }
   return chunks.filter(Boolean);
 }
 
-/* ===== normalizers: laterality & meridians ===== */
+/* =========================
+   normalizers: laterality & meridians
+========================= */
 function normalizeLateralityText(s){
   if (!s) return s;
-
-  // 1) full words → single-letter caps
+  // words → single-letter caps
   s = s
     .replace(/\bbilateral\b|\bboth\b/gi,'B')
     .replace(/\bleft\b/gi,'L')
     .replace(/\bright\b/gi,'R')
     .replace(/\brt\b/gi,'R')
     .replace(/\blt\b/gi,'L');
-
-  // 2a) general standalone r/l/b near separators
+  // general standalone r/l/b near separators
   s = s.replace(/\b\(?([rlb])\)?(?=\s|:|;|,|\/|-|\)|$)/gi, (_m, g1) => g1.toUpperCase());
-
-  // 2b) after bullet at line start (handles: "– r piriformis", "- l knee")
-  s = s.replace(/(^|[\n\r])\s*[–\-•]\s*([rlb])(?=\s|:)/gi,
-    (_m, lead, side) => `${lead}– ${side.toUpperCase()}`);
-
+  // after bullet at line start (“– r piriformis”)
+  s = s.replace(/(^|[\n\r])\s*[–\-•]\s*([rlb])(?=\s|:)/gi, (_m, lead, side) => `${lead}– ${side.toUpperCase()}`);
   return s;
 }
-
 function uppercaseMeridians(s){
   if (!s) return s;
   const mer = ['lv','sp','gb','bl','st','lu','li','si','ht','pc','kd','cv','gv'];
   mer.forEach(m=>{
-    const r1 = new RegExp(`\\b${m}\\b`,'gi');         // lv → LV
-    s = s.replace(r1, m.toUpperCase());
-    const r2 = new RegExp(`\\b${m}\\s?(\\d+)`,'gi');   // lv3 → LV3
-    s = s.replace(r2, (_all, num)=> `${m.toUpperCase()}${num}`);
+    const r1 = new RegExp(`\\b${m}\\b`,'gi'); s = s.replace(r1, m.toUpperCase());               // lv → LV
+    const r2 = new RegExp(`\\b${m}\\s?(\\d+)`,'gi'); s = s.replace(r2, (_a,n)=>`${m.toUpperCase()}${n}`); // lv3 → LV3
   });
   return s;
 }
 const norm = (s)=> uppercaseMeridians(normalizeLateralityText(s||""));
 
+/* =========================
+   ai caller (openai/azure)
+========================= */
 async function aiChat(cfg, messages){
   const base = (cfg.baseUrl || "https://api.openai.com").replace(/\/+$/,"");
   let url, headers, body;
@@ -645,7 +610,9 @@ async function aiChat(cfg, messages){
   throw new Error("api 429: still rate-limited after retries; wait a minute and try again.");
 }
 
-/* ===== herb fallbacks ===== */
+/* =========================
+   herb fallback
+========================= */
 function herbFallbackFromTCM(tcmDxArr){
   try{
     const text = (tcmDxArr||[]).join('; ').toLowerCase();
@@ -663,7 +630,60 @@ function herbFallbackFromTCM(tcmDxArr){
   }catch(e){ return []; }
 }
 
-/* ===== rendering ===== */
+/* =========================
+   fallback composer (from pass‑1 extracts)
+========================= */
+function buildFinalJsonFromExtracts(extList){
+  const hpiBits = [], muscles = [], rom = [], tests = [], pc = [], tcmClues = [], icdCand = [], herbsCand = [];
+  (extList || []).forEach(e => {
+    (e?.hpi_bits || []).forEach(x => hpiBits.push(x));
+    (e?.muscles || []).forEach(m => {
+      const side = (m?.side || "").toLowerCase();
+      const nm   = (m?.name || "").toLowerCase();
+      const finds = (m?.findings || []).join("/").toLowerCase();
+      if (nm) muscles.push(`${side} ${nm}: ${finds}`.trim());
+    });
+    (e?.rom || []).forEach(x => rom.push(x));
+    (e?.muscle_tests || []).forEach(x => tests.push(x));
+    (e?.personal_context || []).forEach(x => pc.push(x));
+    (e?.tcm_clues || []).forEach(x => tcmClues.push(x));
+    (e?.icd_candidates || []).forEach(x => icdCand.push(x));
+    (e?.herb_candidates || []).forEach(x => herbsCand.push(x));
+  });
+
+  return {
+    hpi: (hpiBits[0] || "follow‑up for pain and mobility concerns."),
+    subjective: { sections: [ { header: "general", bullets: Array.from(new Set(hpiBits)).slice(0,4) } ] },
+    objective:  { sections: [
+      { header: "muscles",        bullets: Array.from(new Set(muscles)).slice(0,8) },
+      { header: "rom",            bullets: Array.from(new Set(rom)).slice(0,6) },
+      { header: "muscle testing", bullets: Array.from(new Set(tests)).slice(0,6) }
+    ].filter(s => s.bullets.length) },
+    personal_context: Array.from(new Set(pc)).slice(0,4),
+    tongue: "deduced: not specified",
+    pulse:  "deduced: not specified",
+    assessment: {
+      bullets: Array.from(new Set([ "symptoms consistent with myofascial involvement" ])).slice(0,4),
+      tcm_dx: Array.from(new Set( tcmClues.length ? tcmClues : ["lv qi stagnation","blood stasis in the channels"] )).slice(0,3)
+    },
+    treatment_principle: ["move qi and blood","relax hypertonic musculature"],
+    acupuncture_plan: {
+      channels: "LV, SP, GB, BL, ST as indicated; local ashi",
+      points_used: ["LV3","GB34","KD3"],
+      interventions: ["acupuncture","motor/trigger point release"],
+      adjuncts: ["infrared","cupping","guasha"]
+    },
+    herb_formulas: (herbsCand.length ? Array.from(new Set(herbsCand)).slice(0,2) : ["shen tong zhu yu wan"]),
+    advice: ["gentle mobility work within tolerance","heat as indicated"],
+    icd10: Array.from(new Set(icdCand)).slice(0,4),
+    confidence: 0.66,
+    assumptions: ["constructed from pass‑1 facts due to limited pass‑2 output"]
+  };
+}
+
+/* =========================
+   render note
+========================= */
 function coerceConfidence(val){ if (typeof val !== 'number' || !isFinite(val)) return 0.66; if (val < 0.55) return 0.66; if (val > 0.95) return 0.95; return val; }
 function ensureHipICD(extList, icdArr){
   try{
@@ -674,7 +694,7 @@ function ensureHipICD(extList, icdArr){
     let code = 'M25.559 pain in unspecified hip';
     if (/(r\s?hip|right hip)/i.test(text)) code = 'M25.551 pain in R hip';
     else if (/(l\s?hip|left hip)/i.test(text)) code = 'M25.552 pain in L hip';
-    return [...(icdArr||[]), code]; // preserve case
+    return [...(icdArr||[]), code];
   }catch(e){ return icdArr; }
 }
 function renderNoteFromJSON(j){
@@ -723,7 +743,6 @@ function renderNoteFromJSON(j){
     ].filter(Boolean).join("\n");
   })();
 
-  // herbs: always include at least one (fallback if empty)
   let herbsArr = (j.herb_formulas||[]).map(norm).filter(x=>x && x.trim());
   if (!herbsArr.length){ herbsArr = herbFallbackFromTCM(j.assessment?.tcm_dx||[]); }
   if (!herbsArr.length){ herbsArr = ['shen tong zhu yu wan']; }
@@ -731,7 +750,6 @@ function renderNoteFromJSON(j){
 
   const advice = "advice:\n" + bullets((j.advice||[]).map(norm));
 
-  // icd
   let icdArr = (j.icd10||[]).map(x => normalizeLateralityText(x||""));
   if (window.__extListForICD) { icdArr = ensureHipICD(window.__extListForICD, icdArr); }
   const icd    = icdArr && icdArr.length ? ("icd-10 codes:\n" + bullets(icdArr)) : "";
@@ -749,23 +767,27 @@ function renderNoteFromJSON(j){
     icd
   ].join("\n");
 
-  // final whole-note polish
   return uppercaseMeridians(normalizeLateralityText(note));
 }
 
-/* ===== two‑pass driver ===== */
+/* =========================
+   two‑pass driver
+========================= */
+const tpModal = document.getElementById('tpModal'); const tpProg = document.getElementById('tpProg');
+const tpStep = document.getElementById('tpStep'); const tpLog  = document.getElementById('tpLog');
+document.getElementById('tpClose').onclick = ()=> tpModal.style.display = 'none';
+
 document.getElementById("aiGenerate").onclick = async () => {
   const raw = (inputEl.value || "").trim();
   if (!raw){ alert("paste or dictate a transcript first."); return; }
 
   const cfg = loadAIConfig();
-  if (!cfg.apiKey){ alert("open ai settings → paste your api key."); return; }
+  if (!cfg.apiKey){ alert("open ai settings → paste your api key → test ai → save."); return; }
 
   try {
     tpModal.style.display = 'flex';
     tpStep.textContent = "pass 1 of 2 — extracting facts…";
-    tpProg.style.width = '0%';
-    tpLog.textContent = "splitting transcript into overlapping chunks…";
+    tpProg.style.width = '0%'; tpLog.textContent = "splitting transcript into overlapping chunks…";
 
     const chunks = chunkTranscript(raw);
     if (!chunks.length){ throw new Error("no content after chunking."); }
@@ -809,9 +831,10 @@ document.getElementById("aiGenerate").onclick = async () => {
       extList.push(json);
     }
 
+    // store for hip ICD check
     window.__extListForICD = extList;
 
-    // render a simple outline preview
+    // pass‑1 preview outline
     const outline = [];
     const pcAll = [], hpiBitsAll = [], tcmAll = [], icdAll = [], herbsAll = [], musclesAll = [], romAll=[], testsAll=[];
     extList.forEach(e=>{
@@ -837,7 +860,7 @@ document.getElementById("aiGenerate").onclick = async () => {
     p1TextEl.value = outline.join("\n").trim() || "(no preview items extracted)";
     p1WrapEl.style.display = "block";
 
-    // -------- guard: if nothing useful extracted, stop and guide --------
+    // guard: if nothing useful, stop here (no empty note surprises)
     const nothingUseful =
       !extList.length ||
       extList.every(e =>
@@ -847,14 +870,13 @@ document.getElementById("aiGenerate").onclick = async () => {
         (!e?.subjective_sections || !e.subjective_sections.length) &&
         (!e?.objective_sections  || !e.objective_sections.length)
       );
-
     if (nothingUseful) {
       tpStep.textContent = "stopped — nothing extracted";
-      tpLog.textContent += "\nno facts were captured in pass‑1.\ntry: ai settings → test ai, then paste a short transcript (hpi + muscles) and run again.";
-      return; // do not proceed to pass‑2
+      tpLog.textContent += "\nno facts were captured in pass‑1.\ntry: ai settings → test ai; then paste a short transcript (hpi + muscles) and run again.";
+      return;
     }
 
-    // pass 2
+    // pass 2 — drafting
     tpStep.textContent = "pass 2 of 2 — drafting final note…";
     tpProg.style.width = "90%";
     tpLog.textContent += "\nconsolidating all extracts into a single structured note…";
@@ -870,20 +892,32 @@ document.getElementById("aiGenerate").onclick = async () => {
       "- if tongue/pulse not explicit in extracts, DEDUCE them and label clearly as deduced.",
       "- include personal context (job, family, travel) if present.",
       "- assessment bullets should include biomedical descriptors when appropriate (e.g., myofascial pain syndrome, repetitive strain injury) alongside tcm.",
-      "- tcm dx must use typical textbook patterns (e.g., lv qi stagnation, blood stasis in the channels, kd yin deficiency, shen disturbance).",
-      "- herbal recommendations are REQUIRED in all cases (1–2 patent formulas) aligned with bensky/cam.",
-      "- icd10: choose 3–4 codes that reflect main complaints; if hip pain appears, include appropriate laterality.",
+      "- tcm dx uses textbook patterns (lv qi stagnation, blood stasis in the channels, kd yin deficiency, shen disturbance).",
+      "- herbs are REQUIRED (1–2 patent formulas) aligned with bensky/cam.",
+      "- icd10: choose 3–4 codes; include hip pain laterality when present.",
       "- confidence: realistic 0.55–0.9.",
       "respond only with json using the agreed schema."
     ].join("\n");
 
-    const content2 = await aiChat(cfg, [
-      { role: "system", content: sys2 },
-      { role: "user",   content: JSON.stringify({ extracts: extList }) }
-    ]);
+    let finalJson;
+    try {
+      const content2 = await aiChat(cfg, [
+        { role: "system", content: sys2 },
+        { role: "user",   content: JSON.stringify({ extracts: extList }) }
+      ]);
+      finalJson = JSON.parse(content2);
+    } catch(e){
+      const m2 = (typeof e === "string" ? e : "").match?.(/\{[\s\S]*\}$/);
+      if (m2) { finalJson = JSON.parse(m2[0]); }
+      else { finalJson = {}; }
+    }
 
-    let finalJson; try { finalJson = JSON.parse(content2); }
-    catch(e){ const m2 = content2.match(/\{[\s\S]*\}$/); if (m2) finalJson = JSON.parse(m2[0]); else throw new Error("could not parse pass‑2 json"); }
+    // fallback: if pass‑2 came back thin (no HPI and no objective content)
+    const hasHpi = typeof finalJson?.hpi === "string" && finalJson.hpi.trim().length > 0;
+    const hasObj = Array.isArray(finalJson?.objective?.sections) && finalJson.objective.sections.some(s => (s.bullets||[]).length);
+    if (!hasHpi && !hasObj) {
+      finalJson = buildFinalJsonFromExtracts(extList);
+    }
 
     finalJson.confidence = coerceConfidence(finalJson.confidence);
     const finalNote = renderNoteFromJSON(finalJson);
@@ -891,7 +925,10 @@ document.getElementById("aiGenerate").onclick = async () => {
 
     tpProg.style.width = "100%";
     tpStep.textContent = "done";
-    tpLog.textContent += "\ncompleted ✔";
+    const usedFallback = !hasHpi && !hasObj;
+    tpLog.textContent += usedFallback
+      ? "\npass‑2 returned limited data — composed final note from pass‑1 extracts ✔"
+      : "\ncompleted ✔";
   } catch (e){
     tpStep.textContent = "error";
     tpLog.textContent += "\nerror: " + (e?.message || e);
