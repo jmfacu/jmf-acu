@@ -665,6 +665,7 @@ function chunkTranscript(text){
 
 /* ===== normalizers: laterality & meridians ===== */
 function normalizeLateralityText(s){
+
   if (!s) return s;
 
   // 1) full words → single-letter caps
@@ -675,8 +676,13 @@ function normalizeLateralityText(s){
     .replace(/\brt\b/gi,'R')
     .replace(/\blt\b/gi,'L');
 
-  // 2) standalone single-letter side markers near muscles/findings
-  s = s.replace(/\b\(?([rlb])\)?(?=\s|:|;|,|\/|-|\)|$)/gi, (m, g1) => g1.toUpperCase());
+  // 2a) general standalone r/l/b (word-boundary cases)
+  s = s.replace(/\b\(?([rlb])\)?(?=\s|:|;|,|\/|-|\)|$)/gi, (_m, g1) => g1.toUpperCase());
+
+  // 2b) after common bullet characters at the start of a line
+  //     catches lines like: "– r piriformis: knots" or "- l knee pain"
+  s = s.replace(/(^|[\n\r])\s*[–\-•]\s*([rlb])(?=\s|:)/gi,
+    (_m, lead, side) => `${lead}– ${side.toUpperCase()}`);
 
   return s;
 }
