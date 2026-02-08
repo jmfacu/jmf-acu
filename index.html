@@ -14,7 +14,7 @@
 
   <!-- home-screen icons (ensure icon-180.png sits next to index.html) -->
   <link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=8" />
-  <link rel="icon" sizes="180x180" href="icon-180.png?v=8" />
+  <link rel="icon" href="icon-180.png?v=8" />
 
   <style>
   :root {
@@ -119,10 +119,6 @@
   .cost-bar { height:8px; width:100%; background:#eee; border-radius:999px; overflow:hidden; }
   .cost-bar > div { height:100%; width:0%; background:#BADA55; transition:width .25s ease; }
   .cost-note { font-size:11px; color:var(--muted); }
-  .cost-warn { color:#8a6d3b; }
-  .cost-danger { color:#9c2b2b; }
-  .cost-row { display:flex; flex-wrap:wrap; gap:8px; align-items:center; font-size:12px; color:var(--muted); }
-  .pill { padding:2px 8px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; color:#475569; }
   </style>
 </head>
 <body>
@@ -144,12 +140,12 @@
         <div class="cost-nums" id="costCapText">$0 / $15</div>
       </div>
       <div class="cost-bar"><div id="costBarFill"></div></div>
-      <div class="cost-row">
+      <div class="flex-row" style="gap:6px;">
         <span class="pill" id="costDollars">$0.00</span>
         <span class="pill" id="costTokensIn">in: 0 tok</span>
         <span class="pill" id="costTokensOut">out: 0 tok</span>
       </div>
-      <div class="cost-note" id="costNote">defaults assume gpt‑4o‑mini ($0.15 in / $0.60 out per 1m tok). update in ai settings if you switch models.</div>
+      <div class="cost-note" id="costNote">pricing used: $0.15/1m input, $0.60/1m output (change in ai settings).</div>
     </div>
 
     <div class="flex-row" style="gap:6px;">
@@ -171,7 +167,7 @@
     <button id="aiGenerate">ai generate note</button>
     <button id="duplicateLast" class="secondary">duplicate last</button>
   </div>
-  <div class="notice">you edit first, then click generate. pass 1 extracts facts (with preview), pass 2 writes the final note.</div>
+  <div class="notice">pass 1 extracts facts (with preview); pass 2 writes the final note.</div>
 
   <div class="preview" id="pass1Preview" style="display:none;">
     <h3>ai summary preview (from pass 1)</h3>
@@ -225,10 +221,11 @@
   <div class="flex-row">
     <button id="copyNote">copy to clipboard</button>
     <button id="clearOutput" class="danger">clear output</button>
+    <button id="clearAll" class="danger">clear all</button>
   </div>
 
   <hr>
-  <div class="notice">tip: add this page to your ipad home screen from safari → share → add to home screen (enable “open as web app”).</div>
+  <div class="notice">tip: add this page to your ipad home screen from safari → share → add to home screen.</div>
 </div>
 
 <!-- two-pass progress modal -->
@@ -248,7 +245,7 @@
 <div id="aiModalBackdrop" class="modal-backdrop">
   <div class="modal">
     <h2>ai settings</h2>
-    <p class="notice">your key is stored only on this device (localStorage). set a monthly cap here for the in‑app meter (you can also keep a hard cap in the openai dashboard).</p>
+    <p class="notice">your key is stored only on this device (localStorage). set a monthly cap here for the in‑app meter.</p>
 
     <div class="grid">
       <div>
@@ -279,7 +276,6 @@
         <input id="aiTemp" type="number" min="0" max="1" step="0.1" value="0.2">
       </div>
 
-      <!-- cost meter config -->
       <div>
         <label>monthly cap ($) — in‑app meter</label>
         <input id="aiCap" type="number" min="0" step="1" value="15">
@@ -295,7 +291,7 @@
     </div>
 
     <div class="flex-row" style="justify-content:space-between; margin-top:12px;">
-      <span class="notice">tip: set your openai dashboard hard cap too (e.g., $15). this in‑app meter is an estimate for peace of mind.</span>
+      <span class="notice">set your dashboard hard cap too (e.g., $15). this meter is an estimate.</span>
       <div class="flex-row" style="gap:6px;">
         <button id="aiTest" class="small-btn">test ai</button>
         <button id="aiSave" class="small-btn">save</button>
@@ -307,11 +303,13 @@
 
 <script>
 /* =========================
-   theme toggle
+   small helpers & element refs
 ========================= */
-document.getElementById("toggleTheme").onclick = () => {
-  document.body.classList.toggle("dark");
-};
+const inputEl   = document.getElementById("inputText");
+const outputEl  = document.getElementById("outputText");
+const p1WrapEl  = document.getElementById("pass1Preview");
+const p1TextEl  = document.getElementById("pass1Text");
+document.getElementById("toggleTheme").onclick = () => { document.body.classList.toggle("dark"); };
 
 /* =========================
    speech recognition (final results only)
@@ -326,8 +324,7 @@ if ("webkitSpeechRecognition" in window) {
       if (event.results[i].isFinal) finalText += event.results[i][0].transcript;
     }
     if (finalText.trim() !== "") {
-      const input = document.getElementById("inputText");
-      input.value += (input.value ? " " : "") + finalText.toLowerCase();
+      inputEl.value += (inputEl.value ? " " : "") + finalText.toLowerCase();
     }
   };
   recognition.onend = () => { if (autoRestartMic) recognition.start(); };
@@ -336,39 +333,43 @@ document.getElementById("startMic").onclick = () => {
   if (recognition) { autoRestartMic = true; recognition.start(); }
   else { alert("speech recognition not available in this browser."); }
 };
-document.getElementById("stopMic").onclick = () => {
-  if (recognition) { autoRestartMic = false; recognition.stop(); }
-};
+document.getElementById("stopMic").onclick = () => { if (recognition) { autoRestartMic = false; recognition.stop(); } };
 
 /* =========================
-   input & clipboard
+   input / output / clear buttons
 ========================= */
-document.getElementById("clearInput").onclick = () => { document.getElementById("inputText").value = ""; };
-document.getElementById("copyNote").onclick = () => {
-  const out = document.getElementById("outputText");
-  out.focus(); out.select();
-  try { document.execCommand("copy"); } catch (e) { navigator.clipboard.writeText(out.value); }
+document.getElementById("clearInput").onclick = () => {
+  inputEl.value = "";
+  if (p1TextEl) p1TextEl.value = "";
+  if (p1WrapEl) p1WrapEl.style.display = "none";
 };
-document.getElementById("clearOutput").onclick = () => { document.getElementById("outputText").value = ""; };
+document.getElementById("copyNote").onclick = () => {
+  outputEl.focus(); outputEl.select();
+  try { document.execCommand("copy"); } catch (e) { navigator.clipboard.writeText(outputEl.value); }
+};
+document.getElementById("clearOutput").onclick = () => {
+  outputEl.value = "";
+  if (p1TextEl) p1TextEl.value = "";
+  if (p1WrapEl) p1WrapEl.style.display = "none";
+};
+document.getElementById("clearAll").onclick = () => {
+  inputEl.value = "";
+  outputEl.value = "";
+  if (p1TextEl) p1TextEl.value = "";
+  if (p1WrapEl) p1WrapEl.style.display = "none";
+  try { localStorage.removeItem("lastNote"); } catch(e){}
+  try { window.__extListForICD = null; } catch(e){}
+};
 
 /* =========================
-   ICD favorites
+   ICD favorites & add
 ========================= */
 const icdList = [
   "M54.2 cervicalgia","M25.511 pain in R shoulder","M25.512 pain in L shoulder",
-  "M79.10 myalgia, unspecified","M79.11 myalgia of mastication muscle","M79.12 myalgia of auxiliary muscles, head/neck","M79.18 myofascial pain",
-  "M54.6 pain in thoracic spine","M54.50 low back pain, unspecified","M54.51 vertebrogenic low back pain","M54.59 other low back pain",
-  "M25.551 pain in R hip","M25.552 pain in L hip","M25.559 pain in unspecified hip",
-  "M25.561 pain in R knee","M25.562 pain in L knee",
-  "M25.571 pain in R ankle/foot","M25.572 pain in L ankle/foot",
-  "G47.00 insomnia, unspecified","G47.09 other insomnia",
-  "R14.0 abdominal distension","R14.1 gas pain","R14.2 eructation","R14.3 flatulence",
-  "R11.0 nausea","R11.2 nausea with vomiting",
-  "M25.521 pain in R elbow","M25.522 pain in L elbow",
-  "G43.909 migraine, unsp, not intractable, w/o status migrainosus",
-  "R51.9 headache, unspecified",
-  "M26.621 R TMJ pain","M26.622 L TMJ pain","M26.623 B TMJ pain",
-  "H93.11 tinnitus R","H93.12 tinnitus L","H93.13 tinnitus B"
+  "M79.18 myofascial pain","M54.6 pain in thoracic spine","M54.50 low back pain, unspecified",
+  "M54.59 other low back pain","M25.551 pain in R hip","M25.552 pain in L hip","M25.559 pain in unspecified hip",
+  "M25.561 pain in R knee","M25.562 pain in L knee","G47.00 insomnia, unspecified","G47.09 other insomnia",
+  "R51.9 headache, unspecified"
 ];
 const icdDropdown = document.getElementById("icdDropdown");
 icdList.forEach(code => {
@@ -376,13 +377,12 @@ icdList.forEach(code => {
   opt.value = code; opt.textContent = code; icdDropdown.appendChild(opt);
 });
 document.getElementById("addICD").onclick = () => {
-  const code = icdDropdown.value, out = document.getElementById("outputText");
-  // keep laterality uppercase; do NOT .toLowerCase()
-  out.value += (out.value.trim().length ? "\n" : "") + "icd-10: " + normalizeLateralityText(code);
+  const code = icdDropdown.value;
+  outputEl.value += (outputEl.value.trim().length ? "\n" : "") + "icd-10: " + normalizeLateralityText(code);
 };
 
 /* =========================
-   quick modules
+   quick modules & combos & herbs
 ========================= */
 const modules = {
   "stress": "general\n– increased stress\n– emotional tension\n",
@@ -395,22 +395,14 @@ const moduleDropdown = document.getElementById("moduleDropdown");
 for (const key in modules) {
   const b = document.createElement("button");
   b.className = "small-btn"; b.textContent = key;
-  b.onclick = () => { document.getElementById("inputText").value += " " + modules[key]; };
+  b.onclick = () => { inputEl.value += " " + modules[key]; };
   moduleButtons.appendChild(b);
   const opt = document.createElement("option");
   opt.value = key; opt.textContent = key; moduleDropdown.appendChild(opt);
 }
-document.getElementById("insertModule").onclick = () => {
-  const val = moduleDropdown.value;
-  document.getElementById("inputText").value += " " + modules[val];
-};
+document.getElementById("insertModule").onclick = () => { inputEl.value += " " + modules[moduleDropdown.value]; };
 
-/* =========================
-   combos with custom saving
-========================= */
-let combos = {
-  "LV3 + LI4": "LV3, LI4","ST36 + SP6":"ST36, SP6","GB34 + GB41":"GB34, GB41","BL40 + KD3":"BL40, KD3","GV20 + yintang":"GV20, yintang"
-};
+let combos = { "LV3 + LI4": "LV3, LI4","ST36 + SP6":"ST36, SP6","GB34 + GB41":"GB34, GB41","BL40 + KD3":"BL40, KD3","GV20 + yintang":"GV20, yintang" };
 const comboButtons = document.getElementById("comboButtons");
 const comboDropdown = document.getElementById("comboDropdown");
 function refreshCombos() {
@@ -418,30 +410,24 @@ function refreshCombos() {
   for (const key in combos) {
     const b = document.createElement("button");
     b.className = "small-btn"; b.textContent = key;
-    b.onclick = () => { document.getElementById("inputText").value += " " + combos[key]; };
+    b.onclick = () => { inputEl.value += " " + combos[key]; };
     comboButtons.appendChild(b);
     const opt = document.createElement("option");
     opt.value = key; opt.textContent = key; comboDropdown.appendChild(opt);
   }
 }
-document.getElementById("insertCombo").onclick = () => {
-  const val = comboDropdown.value;
-  document.getElementById("inputText").value += " " + combos[val];
-};
+document.getElementById("insertCombo").onclick = () => { inputEl.value += " " + combos[comboDropdown.value]; };
 document.getElementById("saveCombo").onclick = () => {
   const name = document.getElementById("customComboName").value.trim();
-  const pts = document.getElementById("customComboPoints").value.trim();
+  const pts  = document.getElementById("customComboPoints").value.trim();
   if (!name || !pts) return;
   combos[name] = pts; localStorage.setItem("savedCombos", JSON.stringify(combos));
-  refreshCombos(); document.getElementById("customComboName").value = ""; document.getElementById("customComboPoints").value = "";
+  refreshCombos();
+  document.getElementById("customComboName").value = ""; document.getElementById("customComboPoints").value = "";
 };
-const savedCombos = localStorage.getItem("savedCombos");
-if (savedCombos) { try { combos = JSON.parse(savedCombos); } catch (e) {} }
+const savedCombos = localStorage.getItem("savedCombos"); if (savedCombos) { try { combos = JSON.parse(savedCombos); } catch (e) {} }
 refreshCombos();
 
-/* =========================
-   herbs (patent formulas only)
-========================= */
 let herbFormulas = {
   "jia wei xiao yao wan":"stress/irritability with heat signs",
   "xiao yao wan":"lv qi stagnation with sp deficiency",
@@ -466,24 +452,13 @@ function refreshHerbs() {
   for (const name in herbFormulas) {
     const b = document.createElement("button");
     b.className = "small-btn"; b.textContent = name;
-    b.onclick = () => { addHerbToList(name, herbFormulas[name]); };
+    b.onclick = () => { inputEl.value += ` herbal: ${name}${herbFormulas[name] ? " (" + herbFormulas[name] + ")" : ""}`; };
     herbButtons.appendChild(b);
     const opt = document.createElement("option");
     opt.value = name; opt.textContent = name; herbDropdown.appendChild(opt);
   }
 }
-function addHerbToList(name, note) {
-  const key = "currentHerbs"; const existing = localStorage.getItem(key);
-  let arr = []; if (existing) { try { arr = JSON.parse(existing) || []; } catch(e) { arr = []; } }
-  if (!arr.find(h => h.name === name)) {
-    arr.push({ name, note }); localStorage.setItem(key, JSON.stringify(arr));
-  }
-  const input = document.getElementById("inputText");
-  input.value += ` herbal: ${name}${note ? " (" + note + ")" : ""}`;
-}
-document.getElementById("insertHerb").onclick = () => {
-  const name = herbDropdown.value; addHerbToList(name, herbFormulas[name]);
-};
+document.getElementById("insertHerb").onclick = () => { const name = herbDropdown.value; inputEl.value += ` herbal: ${name}${herbFormulas[name] ? " (" + herbFormulas[name] + ")" : ""}`; };
 document.getElementById("saveHerb").onclick = () => {
   const nm = document.getElementById("customHerbName").value.trim().toLowerCase();
   const nt = document.getElementById("customHerbNote").value.trim().toLowerCase();
@@ -493,12 +468,11 @@ document.getElementById("saveHerb").onclick = () => {
   refreshHerbs();
   document.getElementById("customHerbName").value = ""; document.getElementById("customHerbNote").value = "";
 };
-const savedHerbs2 = localStorage.getItem("savedHerbs");
-if (savedHerbs2) { try { herbFormulas = JSON.parse(savedHerbs2); } catch(e) {} }
+const savedHerbs2 = localStorage.getItem("savedHerbs"); if (savedHerbs2) { try { herbFormulas = JSON.parse(savedHerbs2); } catch(e){} }
 refreshHerbs();
 
 /* =========================
-   AI settings (stored locally)
+   AI settings + cost meter
 ========================= */
 const aiDefaults = {
   provider: "openai",
@@ -507,23 +481,11 @@ const aiDefaults = {
   apiKey: "",
   apiVersion: "2024-02-15-preview",
   temperature: 0.2,
-
-  // cost meter defaults (gpt‑4o‑mini)
-  monthlyCap: 15,        // dollars
-  priceIn: 0.15,         // $ per 1M input tokens
-  priceOut: 0.60         // $ per 1M output tokens
+  monthlyCap: 15, priceIn: 0.15, priceOut: 0.60
 };
-
-function loadAIConfig(){
-  const raw = localStorage.getItem("aiConfig");
-  if (!raw) return {...aiDefaults};
-  try { return {...aiDefaults, ...JSON.parse(raw)}; } catch(e){ return {...aiDefaults}; }
-}
-function saveAIConfig(cfg){
-  localStorage.setItem("aiConfig", JSON.stringify(cfg));
-}
-
-const aiModal = document.getElementById("aiModalBackdrop");
+function loadAIConfig(){ const raw = localStorage.getItem("aiConfig"); if (!raw) return {...aiDefaults};
+  try { return {...aiDefaults, ...JSON.parse(raw)}; } catch(e){ return {...aiDefaults}; } }
+function saveAIConfig(cfg){ localStorage.setItem("aiConfig", JSON.stringify(cfg)); }
 document.getElementById("aiSettingsBtn").onclick = () => {
   const cfg = loadAIConfig();
   document.getElementById("aiProvider").value = cfg.provider;
@@ -532,14 +494,12 @@ document.getElementById("aiSettingsBtn").onclick = () => {
   document.getElementById("aiKey").value = cfg.apiKey;
   document.getElementById("aiApiVersion").value = cfg.apiVersion;
   document.getElementById("aiTemp").value = cfg.temperature;
-
   document.getElementById("aiCap").value = cfg.monthlyCap;
   document.getElementById("aiPriceIn").value = cfg.priceIn;
   document.getElementById("aiPriceOut").value = cfg.priceOut;
-
-  aiModal.style.display = "flex";
+  document.getElementById("aiModalBackdrop").style.display = "flex";
 };
-document.getElementById("aiClose").onclick = () => { aiModal.style.display = "none"; };
+document.getElementById("aiClose").onclick = () => { document.getElementById("aiModalBackdrop").style.display = "none"; };
 document.getElementById("aiSave").onclick = () => {
   const cfg = {
     provider: document.getElementById("aiProvider").value,
@@ -548,72 +508,33 @@ document.getElementById("aiSave").onclick = () => {
     apiKey: document.getElementById("aiKey").value.trim(),
     apiVersion: document.getElementById("aiApiVersion").value.trim() || aiDefaults.apiVersion,
     temperature: parseFloat(document.getElementById("aiTemp").value) || aiDefaults.temperature,
-
     monthlyCap: Math.max(0, parseFloat(document.getElementById("aiCap").value) || aiDefaults.monthlyCap),
     priceIn: Math.max(0, parseFloat(document.getElementById("aiPriceIn").value) || aiDefaults.priceIn),
     priceOut: Math.max(0, parseFloat(document.getElementById("aiPriceOut").value) || aiDefaults.priceOut)
   };
-  saveAIConfig(cfg);
-  aiModal.style.display = "none";
-  renderCostUI();
+  saveAIConfig(cfg); document.getElementById("aiModalBackdrop").style.display = "none"; renderCostUI();
 };
-
-/* ===== test AI button (tiny probe) ===== */
 document.getElementById("aiTest").onclick = async () => {
-  const cfg = loadAIConfig();
-  if (!cfg.apiKey){ alert("paste your api key first."); return; }
+  const cfg = loadAIConfig(); if (!cfg.apiKey){ alert("paste your api key first."); return; }
   try {
     await aiChat(cfg, [
       { role:"system", content:'reply with {"ok":true} only (json).' },
       { role:"user",   content:"ping" }
     ]);
     alert("ai test ok — billing/key look good.");
-  } catch(e){
-    alert("ai test failed: " + (e?.message || e));
-  }
+  } catch(e){ alert("ai test failed: " + (e?.message || e)); }
 };
 
-/* =========================
-   cost meter (estimation)
-========================= */
 const METER_KEY = "costMeter";
-function monthKeyNow(){
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`;
-}
-function loadMeter(){
-  const raw = localStorage.getItem(METER_KEY);
-  const mk = monthKeyNow();
-  let obj = { month: mk, inTok: 0, outTok: 0 };
-  if (raw) { try { obj = JSON.parse(raw) || obj; } catch(e){} }
-  if (obj.month !== mk) obj = { month: mk, inTok: 0, outTok: 0 };
-  return obj;
-}
-function saveMeter(obj){
-  localStorage.setItem(METER_KEY, JSON.stringify(obj));
-}
-function charsToTokens(s){
-  if (!s) return 0;
-  return Math.ceil(s.length / 4);
-}
-function estimateMessagesTokens(messages){
-  let total = 0;
-  (messages||[]).forEach(m => total += charsToTokens(m?.content || ""));
-  return total;
-}
-function addToMeter(deltaInTok, deltaOutTok){
-  const m = loadMeter();
-  m.inTok += Math.max(0, Math.floor(deltaInTok||0));
-  m.outTok += Math.max(0, Math.floor(deltaOutTok||0));
-  saveMeter(m);
-  renderCostUI();
-}
-function currentCost(){
-  const cfg = loadAIConfig();
-  const m = loadMeter();
-  const dollars = (m.inTok/1e6)*cfg.priceIn + (m.outTok/1e6)*cfg.priceOut;
-  return { dollars, inTok: m.inTok, outTok: m.outTok, cap: cfg.monthlyCap, priceIn: cfg.priceIn, priceOut: cfg.priceOut };
-}
+function monthKeyNow(){ const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`; }
+function loadMeter(){ const raw = localStorage.getItem(METER_KEY); const mk = monthKeyNow();
+  let obj = { month: mk, inTok: 0, outTok: 0 }; if (raw) { try { obj = JSON.parse(raw) || obj; } catch(e){} }
+  if (obj.month !== mk) obj = { month: mk, inTok: 0, outTok: 0 }; return obj; }
+function saveMeter(obj){ localStorage.setItem(METER_KEY, JSON.stringify(obj)); }
+function charsToTokens(s){ if (!s) return 0; return Math.ceil(s.length / 4); }
+function estimateMessagesTokens(messages){ let total = 0; (messages||[]).forEach(m => total += charsToTokens(m?.content || "")); return total; }
+function addToMeter(deltaInTok, deltaOutTok){ const m = loadMeter(); m.inTok += Math.max(0, Math.floor(deltaInTok||0)); m.outTok += Math.max(0, Math.floor(deltaOutTok||0)); saveMeter(m); renderCostUI(); }
+function currentCost(){ const cfg = loadAIConfig(); const m = loadMeter(); const dollars = (m.inTok/1e6)*cfg.priceIn + (m.outTok/1e6)*cfg.priceOut; return { dollars, inTok: m.inTok, outTok: m.outTok, cap: cfg.monthlyCap, priceIn: cfg.priceIn, priceOut: cfg.priceOut }; }
 function renderCostUI(){
   const { dollars, inTok, outTok, cap, priceIn, priceOut } = currentCost();
   const capText = document.getElementById("costCapText");
@@ -622,7 +543,6 @@ function renderCostUI(){
   const inEl = document.getElementById("costTokensIn");
   const outEl = document.getElementById("costTokensOut");
   const note = document.getElementById("costNote");
-
   const pct = cap > 0 ? Math.min(100, Math.round((dollars / cap) * 100)) : 0;
   barFill.style.width = pct + "%";
   barFill.style.background = (pct >= 100) ? "#E35D5D" : (pct >= 80 ? "#E3B75D" : "#BADA55");
@@ -630,34 +550,26 @@ function renderCostUI(){
   dollarsEl.textContent = `$${dollars.toFixed(2)}`;
   inEl.textContent = `in: ${inTok.toLocaleString()} tok`;
   outEl.textContent = `out: ${outTok.toLocaleString()} tok`;
-
   note.textContent = `pricing used: $${priceIn}/1m input, $${priceOut}/1m output (change in ai settings).`;
 }
 renderCostUI();
 
 /* =========================
-   two‑pass generation
+   two-pass generation core
 ========================= */
-const CHUNK_CHARS = 8000;     // target size per chunk (characters)
-const CHUNK_OVERLAP = 800;    // overlap to avoid boundary loss
-const MAX_TRIES = 3;
-const BACKOFFS = [2000, 4000, 8000]; // 429 retry delays
-
-const tpModal = document.getElementById('tpModal');
-const tpProg = document.getElementById('tpProg');
-const tpStep = document.getElementById('tpStep');
-const tpLog  = document.getElementById('tpLog');
+const CHUNK_CHARS = 8000; const CHUNK_OVERLAP = 800; const MAX_TRIES = 3;
+const tpModal = document.getElementById('tpModal'); const tpProg = document.getElementById('tpProg');
+const tpStep = document.getElementById('tpStep'); const tpLog  = document.getElementById('tpLog');
 document.getElementById('tpClose').onclick = ()=> tpModal.style.display = 'none';
 
 function chunkTranscript(text){
-  const chunks = [];
-  let i = 0;
+  const chunks = []; let i = 0;
   while (i < text.length) {
     const end = Math.min(text.length, i + CHUNK_CHARS);
     const chunk = text.slice(i, end);
     chunks.push(chunk.trim());
     if (end >= text.length) break;
-    i = end - CHUNK_OVERLAP; // overlap
+    i = end - CHUNK_OVERLAP;
     if (i < 0) i = 0;
   }
   return chunks.filter(Boolean);
@@ -665,7 +577,6 @@ function chunkTranscript(text){
 
 /* ===== normalizers: laterality & meridians ===== */
 function normalizeLateralityText(s){
-
   if (!s) return s;
 
   // 1) full words → single-letter caps
@@ -676,11 +587,10 @@ function normalizeLateralityText(s){
     .replace(/\brt\b/gi,'R')
     .replace(/\blt\b/gi,'L');
 
-  // 2a) general standalone r/l/b (word-boundary cases)
+  // 2a) general standalone r/l/b near separators
   s = s.replace(/\b\(?([rlb])\)?(?=\s|:|;|,|\/|-|\)|$)/gi, (_m, g1) => g1.toUpperCase());
 
-  // 2b) after common bullet characters at the start of a line
-  //     catches lines like: "– r piriformis: knots" or "- l knee pain"
+  // 2b) after bullet at line start (handles: "– r piriformis", "- l knee")
   s = s.replace(/(^|[\n\r])\s*[–\-•]\s*([rlb])(?=\s|:)/gi,
     (_m, lead, side) => `${lead}– ${side.toUpperCase()}`);
 
@@ -698,14 +608,11 @@ function uppercaseMeridians(s){
   });
   return s;
 }
-
 const norm = (s)=> uppercaseMeridians(normalizeLateralityText(s||""));
 
-/* unified API caller with token estimation+retries */
 async function aiChat(cfg, messages){
   const base = (cfg.baseUrl || "https://api.openai.com").replace(/\/+$/,"");
   let url, headers, body;
-
   const reqInTokens = estimateMessagesTokens(messages);
 
   if (cfg.provider === "azure") {
@@ -725,25 +632,11 @@ async function aiChat(cfg, messages){
       const data = await resp.json();
       const content = data?.choices?.[0]?.message?.content || data?.choices?.[0]?.text || "";
       if (!content) throw new Error("no content in response");
-
-      const outTok = charsToTokens(content);
-      addToMeter(reqInTokens, outTok);
-
+      const outTok = charsToTokens(content); addToMeter(reqInTokens, outTok);
       return content;
     }
-
     try { lastText = await resp.clone().text(); } catch { lastText = ""; }
-    let ejson = null;
-    try { ejson = JSON.parse(lastText); } catch {}
-
-    if (ejson?.error?.code === "insufficient_quota") {
-      throw new Error("insufficient quota: add a payment method or raise your monthly usage limit in the openai dashboard, then try again.");
-    }
-
-    if (resp.status === 429 && attempt < MAX_TRIES){
-      await new Promise(r=>setTimeout(r, [2000,4000,8000][attempt-1]));
-      continue;
-    }
+    if (resp.status === 429 && attempt < MAX_TRIES){ await new Promise(r=>setTimeout(r, [2000,4000,8000][attempt-1])); continue; }
     if (resp.status === 401) throw new Error("unauthorized (401): check your api key.");
     if (resp.status === 400) throw new Error("bad request (400): check model name / base url.");
     if (resp.status >= 500) throw new Error("server error: try again in a moment.");
@@ -752,56 +645,26 @@ async function aiChat(cfg, messages){
   throw new Error("api 429: still rate-limited after retries; wait a minute and try again.");
 }
 
-/* ===== herb fallback mapping (if model forgets) ===== */
+/* ===== herb fallbacks ===== */
 function herbFallbackFromTCM(tcmDxArr){
   try{
     const text = (tcmDxArr||[]).join('; ').toLowerCase();
-    const picks = [];
-    const push = (x)=>{ if (x && !picks.includes(x)) picks.push(x); };
-    if (/\blv\b|liver qi stag|qi stagnation/.test(text)) {
-      if (/heat|irrit/.test(text)) push('jia wei xiao yao wan');
-      else push('xiao yao wan');
-      push('chai hu shu gan wan');
-    }
-    if (/blood stasis|stasis in the channel|fixed stabbing pain/.test(text)) {
-      push('shen tong zhu yu wan');
-    }
-    if (/wind|cold|damp/.test(text) && /bi/.test(text)) {
-      push('du huo ji sheng wan');
-      push('juan bi wan');
-    }
-    if (/kd yin def|kidney yin def|yin deficiency/.test(text)) {
-      push('zuo gui wan');
-      push('tian wang bu xin dan');
-    }
-    if (/shen disturbance|insomnia|palpitations/.test(text)) {
-      push('tian wang bu xin dan');
-      push('suan zao ren tang wan');
-    }
-    if (/sp qi def|spleen qi def|fatigue|poor appetite/.test(text)) {
-      push('gui pi wan');
-    }
-    if (/wei qi def|recurrent colds|allergy/.test(text)) {
-      push('yu ping feng wan');
-    }
-    if (/phlegm|plum[- ]?pit|qi stagnation with phlegm/.test(text)) {
-      push('ban xia hou po wan');
-    }
-    if (/food stagnation/.test(text)) {
-      push('bao he wan');
-    }
+    const picks = []; const push = (x)=>{ if (x && !picks.includes(x)) picks.push(x); };
+    if (/\blv\b|liver qi stag|qi stagnation/.test(text)) { if (/heat|irrit/.test(text)) push('jia wei xiao yao wan'); else push('xiao yao wan'); push('chai hu shu gan wan'); }
+    if (/blood stasis|stasis in the channel|fixed stabbing pain/.test(text)) { push('shen tong zhu yu wan'); }
+    if (/wind|cold|damp/.test(text) && /bi/.test(text)) { push('du huo ji sheng wan'); push('juan bi wan'); }
+    if (/kd yin def|kidney yin def|yin deficiency/.test(text)) { push('zuo gui wan'); push('tian wang bu xin dan'); }
+    if (/shen disturbance|insomnia|palpitations/.test(text)) { push('tian wang bu xin dan'); push('suan zao ren tang wan'); }
+    if (/sp qi def|spleen qi def|fatigue|poor appetite/.test(text)) { push('gui pi wan'); }
+    if (/wei qi def|recurrent colds|allergy/.test(text)) { push('yu ping feng wan'); }
+    if (/phlegm|plum[- ]?pit|qi stagnation with phlegm/.test(text)) { push('ban xia hou po wan'); }
+    if (/food stagnation/.test(text)) { push('bao he wan'); }
     return picks.slice(0,2);
   }catch(e){ return []; }
 }
 
-/* ===== rendering & integrity helpers ===== */
-function coerceConfidence(val){
-  if (typeof val !== 'number' || !isFinite(val)) return 0.66;
-  if (val < 0.55) return 0.66;
-  if (val > 0.95) return 0.95;
-  return val;
-}
-
+/* ===== rendering ===== */
+function coerceConfidence(val){ if (typeof val !== 'number' || !isFinite(val)) return 0.66; if (val < 0.55) return 0.66; if (val > 0.95) return 0.95; return val; }
 function ensureHipICD(extList, icdArr){
   try{
     const text = JSON.stringify(extList).toLowerCase();
@@ -811,18 +674,15 @@ function ensureHipICD(extList, icdArr){
     let code = 'M25.559 pain in unspecified hip';
     if (/(r\s?hip|right hip)/i.test(text)) code = 'M25.551 pain in R hip';
     else if (/(l\s?hip|left hip)/i.test(text)) code = 'M25.552 pain in L hip';
-    // do NOT lowercase; preserve L/R
-    return [...(icdArr||[]), code];
+    return [...(icdArr||[]), code]; // preserve case
   }catch(e){ return icdArr; }
 }
-
 function renderNoteFromJSON(j){
   function bullets(arr){ return (arr||[]).map(s=>"– "+(s||"")).join("\n"); }
   function sections(sec){
     if(!sec||!sec.sections) return "";
     return sec.sections.map(s=>{
-      let hdr=s.header||"";
-      let blt=bullets(s.bullets||[]);
+      let hdr=s.header||""; let blt=bullets(s.bullets||[]);
       hdr = normalizeLateralityText(hdr); blt = normalizeLateralityText(blt);
       hdr = uppercaseMeridians(hdr); blt = uppercaseMeridians(blt);
       return hdr + (blt?("\n"+blt):"");
@@ -863,22 +723,17 @@ function renderNoteFromJSON(j){
     ].filter(Boolean).join("\n");
   })();
 
-  // herbs: always include at least one (fallback if model leaves empty)
+  // herbs: always include at least one (fallback if empty)
   let herbsArr = (j.herb_formulas||[]).map(norm).filter(x=>x && x.trim());
-  if (!herbsArr.length){
-    herbsArr = herbFallbackFromTCM(j.assessment?.tcm_dx||[]);
-  }
-  if (!herbsArr.length){
-    herbsArr = ['shen tong zhu yu wan'];
-  }
+  if (!herbsArr.length){ herbsArr = herbFallbackFromTCM(j.assessment?.tcm_dx||[]); }
+  if (!herbsArr.length){ herbsArr = ['shen tong zhu yu wan']; }
   const herbs  = "herbal recommendations (patent formulas):\n" + bullets(herbsArr);
 
   const advice = "advice:\n" + bullets((j.advice||[]).map(norm));
 
+  // icd
   let icdArr = (j.icd10||[]).map(x => normalizeLateralityText(x||""));
-  if (window.__extListForICD) {
-    icdArr = ensureHipICD(window.__extListForICD, icdArr);
-  }
+  if (window.__extListForICD) { icdArr = ensureHipICD(window.__extListForICD, icdArr); }
   const icd    = icdArr && icdArr.length ? ("icd-10 codes:\n" + bullets(icdArr)) : "";
 
   const note = [
@@ -894,27 +749,17 @@ function renderNoteFromJSON(j){
     icd
   ].join("\n");
 
-  // final, whole-note polish to guarantee L/R/B and LV/KD/GB, LV3, etc.
+  // final whole-note polish
   return uppercaseMeridians(normalizeLateralityText(note));
 }
 
 /* ===== two‑pass driver ===== */
 document.getElementById("aiGenerate").onclick = async () => {
-  const raw = (document.getElementById("inputText").value || "").trim();
+  const raw = (inputEl.value || "").trim();
   if (!raw){ alert("paste or dictate a transcript first."); return; }
 
   const cfg = loadAIConfig();
   if (!cfg.apiKey){ alert("open ai settings → paste your api key."); return; }
-
-  const { dollars, cap } = currentCost();
-  if (cap > 0 && dollars >= cap * 0.8 && dollars < cap) {
-    const ok = confirm(`heads up: you're at ~$${dollars.toFixed(2)} of your $${cap.toFixed(0)} in‑app cap. continue?`);
-    if (!ok) return;
-  }
-  if (cap > 0 && dollars >= cap) {
-    const ok = confirm(`you've reached your in‑app cap ($${cap.toFixed(0)}). continue anyway?`);
-    if (!ok) return;
-  }
 
   try {
     tpModal.style.display = 'flex';
@@ -959,29 +804,15 @@ document.getElementById("aiGenerate").onclick = async () => {
         { role: "user",   content: chunks[i] }
       ]);
 
-      let json;
-      try { json = JSON.parse(content); }
-      catch(e){
-        const m = content.match(/\{[\s\S]*\}$/);
-        if (m) json = JSON.parse(m[0]); else throw new Error("could not parse pass‑1 json");
-      }
+      let json; try { json = JSON.parse(content); }
+      catch(e){ const m = content.match(/\{[\s\S]*\}$/); if (m) json = JSON.parse(m[0]); else throw new Error("could not parse pass‑1 json"); }
       extList.push(json);
     }
 
     window.__extListForICD = extList;
 
-    // pass‑1 preview (quick outline)
-    const preview = document.getElementById("pass1Preview");
-    const previewBox = document.getElementById("pass1Text");
+    // render a simple outline preview
     const outline = [];
-    const addLines = (hdr, arr)=>{
-      if (arr && arr.length){
-        outline.push(hdr + ":");
-        Array.from(new Set(arr)).forEach(s => outline.push("– " + s));
-        outline.push("");
-      }
-    };
-
     const pcAll = [], hpiBitsAll = [], tcmAll = [], icdAll = [], herbsAll = [], musclesAll = [], romAll=[], testsAll=[];
     extList.forEach(e=>{
       (e.personal_context||[]).forEach(s=> pcAll.push(s));
@@ -993,7 +824,7 @@ document.getElementById("aiGenerate").onclick = async () => {
       (e.rom||[]).forEach(r=> romAll.push(r));
       (e.muscle_tests||[]).forEach(r=> testsAll.push(r));
     });
-
+    function addLines(h, a){ if (a && a.length){ outline.push(h + ":"); Array.from(new Set(a)).forEach(s => outline.push("– " + s)); outline.push(""); } }
     addLines("hpi highlights", hpiBitsAll);
     addLines("muscles (raw)", musclesAll);
     addLines("rom (raw)", romAll);
@@ -1003,10 +834,27 @@ document.getElementById("aiGenerate").onclick = async () => {
     addLines("icd candidates", icdAll);
     addLines("herb candidates", herbsAll);
 
-    previewBox.value = outline.join("\n").trim() || "(no preview items extracted)";
-    preview.style.display = "block";
+    p1TextEl.value = outline.join("\n").trim() || "(no preview items extracted)";
+    p1WrapEl.style.display = "block";
 
-    // pass 2 (final drafting)
+    // -------- guard: if nothing useful extracted, stop and guide --------
+    const nothingUseful =
+      !extList.length ||
+      extList.every(e =>
+        (!e?.hpi_bits || !e.hpi_bits.length) &&
+        (!e?.muscles   || !e.muscles.length) &&
+        (!e?.rom       || !e.rom.length) &&
+        (!e?.subjective_sections || !e.subjective_sections.length) &&
+        (!e?.objective_sections  || !e.objective_sections.length)
+      );
+
+    if (nothingUseful) {
+      tpStep.textContent = "stopped — nothing extracted";
+      tpLog.textContent += "\nno facts were captured in pass‑1.\ntry: ai settings → test ai, then paste a short transcript (hpi + muscles) and run again.";
+      return; // do not proceed to pass‑2
+    }
+
+    // pass 2
     tpStep.textContent = "pass 2 of 2 — drafting final note…";
     tpProg.style.width = "90%";
     tpLog.textContent += "\nconsolidating all extracts into a single structured note…";
@@ -1022,11 +870,11 @@ document.getElementById("aiGenerate").onclick = async () => {
       "- if tongue/pulse not explicit in extracts, DEDUCE them and label clearly as deduced.",
       "- include personal context (job, family, travel) if present.",
       "- assessment bullets should include biomedical descriptors when appropriate (e.g., myofascial pain syndrome, repetitive strain injury) alongside tcm.",
-      "- tcm diagnosis must use typical textbook patterns (e.g., lv qi stagnation, blood stasis in the channels, kd yin deficiency, shen disturbance).",
+      "- tcm dx must use typical textbook patterns (e.g., lv qi stagnation, blood stasis in the channels, kd yin deficiency, shen disturbance).",
       "- herbal recommendations are REQUIRED in all cases (1–2 patent formulas) aligned with bensky/cam.",
-      "- icd10: choose 3–4 codes that reflect main complaints; if hip pain appears, include the appropriate laterality.",
+      "- icd10: choose 3–4 codes that reflect main complaints; if hip pain appears, include appropriate laterality.",
       "- confidence: realistic 0.55–0.9.",
-      'respond only with json using the agreed schema.'
+      "respond only with json using the agreed schema."
     ].join("\n");
 
     const content2 = await aiChat(cfg, [
@@ -1034,18 +882,12 @@ document.getElementById("aiGenerate").onclick = async () => {
       { role: "user",   content: JSON.stringify({ extracts: extList }) }
     ]);
 
-    let finalJson;
-    try { finalJson = JSON.parse(content2); }
-    catch(e){
-      const m2 = content2.match(/\{[\s\S]*\}$/);
-      if (m2) finalJson = JSON.parse(m2[0]); else throw new Error("could not parse pass‑2 json");
-    }
+    let finalJson; try { finalJson = JSON.parse(content2); }
+    catch(e){ const m2 = content2.match(/\{[\s\S]*\}$/); if (m2) finalJson = JSON.parse(m2[0]); else throw new Error("could not parse pass‑2 json"); }
 
     finalJson.confidence = coerceConfidence(finalJson.confidence);
-
     const finalNote = renderNoteFromJSON(finalJson);
-    document.getElementById("outputText").value = finalNote;
-    localStorage.setItem("lastNote", finalNote);
+    outputEl.value = finalNote; localStorage.setItem("lastNote", finalNote);
 
     tpProg.style.width = "100%";
     tpStep.textContent = "done";
@@ -1059,7 +901,7 @@ document.getElementById("aiGenerate").onclick = async () => {
 /* duplicate last */
 document.getElementById("duplicateLast").onclick = () => {
   const last = localStorage.getItem("lastNote");
-  if (last) document.getElementById("outputText").value = last;
+  if (last) outputEl.value = last;
 };
 </script>
 
