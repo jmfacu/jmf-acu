@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>jmf acu</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="jmf acu">
+  <style>
+    :root{--bg:#fff;--text:#222;--muted:#6b7280;--line:#e5e7eb;--accent:#4F3D5C;--accent-2:#5d4a6c;--pill-grey:#6b7280;--pill-grey-2:#4b5563;--pill-green:#BADA55;--pill-green-text:#0b1324;--radius:16px;--pill:9999px}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial}
+    .container{max-width:980px;margin:0 auto;padding:16px}
+    .head{display:flex;gap:14px;align-items:flex-start}
+    .logo{width:72px;height:72px;border-radius:18px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font:700 20px system-ui;flex-direction:column;line-height:1}
+    h1{margin:0;color:var(--accent);font:600 28px system-ui;text-transform:lowercase}
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .section-title{margin:18px 0 8px;color:var(--accent);font:600 18px system-ui;text-transform:lowercase}
+    textarea{width:100%;min-height:120px;border:1px solid var(--line);border-radius:14px;padding:12px;font:16px system-ui;color:var(--text)}
+    textarea.output{min-height:360px}
+    .btn{border:0;border-radius:var(--pill);padding:9px 14px;font:600 15px system-ui;cursor:pointer;transition:background .15s ease,color .15s ease}
+    .btn:disabled{opacity:.6;cursor:not-allowed}
+    .btn-accent{background:var(--accent);color:#fff}
+    .btn-accent:hover{background:var(--accent-2)}
+    .btn-grey{background:var(--pill-grey);color:#fff}
+    .btn-grey:hover{background:var(--pill-grey-2)}
+    .btn-green{background:var(--pill-green);color:var(--pill-green-text)}
+    .note{font-size:12px;color:var(--muted)}
+    .card{border:1px solid var(--line);border-radius:14px;padding:10px 12px;background:#fafafa}
+    .hidden{display:none}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- header (minimal) -->
+    <div class="head">
+      <div class="logo"><div>jmf</div><div>acu</div></div>
+      <div>
+        <h1>jmf acu</h1>
+        <div class="row" style="margin-top:10px">
+          <button id="aiSettingsBtn" class="btn btn-green">ai settings</button>
+          <button id="btnToggle" class="btn btn-grey">toggle</button>
+          <button id="btnShowTools" class="btn btn-grey">show tools</button>
+          <button id="btnShowCost" class="btn btn-grey">show cost</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- cost card (toggled) -->
+    <div id="costCard" class="card hidden" style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:600;color:var(--accent)">estimated cost (this month)</div>
+        <div id="costCapText" class="note">$0 / $15</div>
+      </div>
+      <div class="row" style="margin-top:6px"><span class="card">$<span id="costDollars">0.00</span></span><span class="card">in: <span id="costTokensIn">0</span> tok</span><span class="card">out: <span id="costTokensOut">0</span> tok</span></div>
+    </div>
+
+    <!-- transcript input -->
+    <div class="section-title">transcript input</div>
+    <textarea id="inputText" placeholder="paste transcript (60–90 min ok)…"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="startDict" class="btn btn-accent">🎤 start dictation</button>
+      <button id="stopDict" class="btn btn-grey">stop dictation</button>
+      <button id="clearInput" class="btn btn-accent">clear input</button>
+      <button id="pasteDemo" class="btn btn-green">paste test text</button>
+      <span id="asrStatus" class="note"></span>
+    </div>
+
+    <!-- tools panel (toggled) -->
+    <div id="toolsPanel" class="card hidden" style="margin-top:10px">
+      <div class="row" id="moduleButtons"></div>
+      <div class="row"><select id="moduleDropdown"></select><button id="insertModule" class="btn btn-green">insert</button></div>
+      <div style="height:1px;background:var(--line);margin:10px 0"></div>
+      <div class="row" id="comboButtons"></div>
+      <div class="row"><select id="comboDropdown"></select><button id="insertCombo" class="btn btn-green">insert</button></div>
+      <div style="height:1px;background:var(--line);margin:10px 0"></div>
+      <div class="row" id="herbButtons"></div>
+      <div class="row"><select id="herbDropdown"></select><button id="insertHerb" class="btn btn-green">add</button></div>
+      <div style="height:1px;background:var(--line);margin:10px 0"></div>
+      <div class="row"><select id="icdDropdown"></select><button id="addICD" class="btn btn-green">add icd‑10</button></div>
+    </div>
+
+    <!-- pass‑1 preview (toggled visible during generation) -->
+    <div id="pass1Wrap" class="card hidden" style="margin-top:12px">
+      <div class="note" style="margin-bottom:6px">ai summary preview (from pass 1)</div>
+      <textarea id="pass1Text" readonly style="height:140px"></textarea>
+    </div>
+
+    <!-- ai generation -->
+    <div class="section-title">ai generation (two-pass with fallback)</div>
+    <div class="row">
+      <button id="aiGenerate" class="btn btn-accent">ai generate note</button>
+      <button id="duplicateLast" class="btn btn-grey">duplicate last</button>
+    </div>
+
+    <!-- output -->
+    <div class="section-title">output note</div>
+    <textarea id="outputText" class="output" placeholder="your formatted note will appear here…"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button id="copyNote" class="btn btn-accent">copy to clipboard</button>
+      <button id="clearOutput" class="btn btn-accent">clear output</button>
+      <button id="clearAll" class="btn btn-accent">clear all</button>
+    </div>
+  </div>
+
+<script>
+// ===== helpers
+const lower=s=>(s||'').toLowerCase();
+const normLat=s=>(s||'').replace(/\bbilateral\b|\bboth\b/gi,'B').replace(/\bleft\b/gi,'L').replace(/\bright\b/gi,'R').replace(/\brt\b/gi,'R').replace(/\blt\b/gi,'L').replace(/\b\(?([rlb])\)?(?=\s|:|;|,|\/|-|\)|$)/gi,(_m,g)=>g.toUpperCase());
+const upMer=s=>{if(!s)return s;s=s.replace(/\bLIV\b|\bliv\b/g,'LV');['lv','sp','gb','bl','st','lu','li','si','ht','pc','kd','cv','gv'].forEach(m=>{s=s.replace(new RegExp(`\\b${m}\\b`,'gi'),m.toUpperCase());s=s.replace(new RegExp(`\\b${m}\\s?(\\d+)`,'gi'),(_a,n)=>`${m.toUpperCase()}${n}`);});return s;}
+const canon=s=>upMer(normLat(lower(s)));
+const muscleWords=/(hamstring|quadriceps|quads|glute|piriformis|tfl|tensor fasci[ae]|scm|sternocleidomastoid|trapezius|trap|levator|scalene|pec|pectoralis|lat|lats|rhomboid|paraspinal|erector|adductor|hip flexor|gastroc|gastrocnemius|soleus|calf|forearm|wrist extensor|wrist flexor)/i;
+function ensureMuscleQuality(t){if(!muscleWords.test(t||''))return t;if(/trigger point|ropey band|tight tender/i.test(t))return t;return t.replace(muscleWords,m=>m)+': trigger point';}
+const ICD_MAP={'M79.18':'other myalgia (myofascial pain)','M54.2':'cervicalgia','M54.50':'low back pain, unspecified','M54.59':'other low back pain','M54.6':'pain in thoracic spine','M25.511':'pain in right shoulder','M25.512':'pain in left shoulder','M25.551':'pain in right hip','M25.552':'pain in left hip','M25.559':'pain in unspecified hip','M25.561':'pain in right knee','M25.562':'pain in left knee','G47.00':'insomnia, unspecified','G47.09':'other insomnia','R51.9':'headache, unspecified'};
+function icdPretty(x){const raw=(x||'').trim();if(/:\s*/.test(raw))return raw;const m=raw.match(/[A-Z][0-9][0-9A-Z]\.[0-9A-Z]{1,4}/i);if(!m)return raw;const c=m[0].toUpperCase();return ICD_MAP[c]?`${c}: ${ICD_MAP[c]}`:c;}
+const $=s=>document.querySelector(s);
+
+// ===== DOM elements
+const inputEl=$('#inputText');
+const outputEl=$('#outputText');
+const asrStatus=$('#asrStatus');
+const p1Wrap=$('#pass1Wrap');
+const p1Text=$('#pass1Text');
+
+// ===== header toggles
+$('#btnShowTools').onclick=()=>{const p=$('#toolsPanel');const wasHidden=p.classList.contains('hidden');p.classList.toggle('hidden');$('#btnShowTools').textContent=wasHidden?'hide tools':'show tools';};
+$('#btnShowCost').onclick=()=>{const p=$('#costCard');const wasHidden=p.classList.contains('hidden');p.classList.toggle('hidden');$('#btnShowCost').textContent=wasHidden?'hide cost':'show cost';renderCost();};
+$('#btnToggle').onclick=()=>{$('#btnShowTools').click();$('#btnShowCost').click();};
+
+// ===== quick actions
+$('#pasteDemo').onclick=()=>{inputEl.value='back pain worse with long travel; neck stiffness on waking; intermittent headaches; denied moxa use. prefers gentle heat. sleeps poorly when traveling.'};
+$('#clearInput').onclick=()=>{inputEl.value='';};
+$('#clearOutput').onclick=()=>{outputEl.value='';};
+$('#clearAll').onclick=()=>{inputEl.value='';outputEl.value='';p1Text.value='';p1Wrap.classList.add('hidden');};
+$('#copyNote').onclick=async()=>{try{await navigator.clipboard.writeText(outputEl.value||'');asrStatus.textContent='copied';setTimeout(()=>asrStatus.textContent='',1200);}catch(e){outputEl.focus();outputEl.select();document.execCommand('copy');asrStatus.textContent='copied';setTimeout(()=>asrStatus.textContent='',1200);}};
+$('#duplicateLast').onclick=()=>{const last=localStorage.getItem('lastNote');if(last)outputEl.value=last;};
+
+// ===== dictation
+let recognizer=null,listening=false;
+function initASR(){const R=window.SpeechRecognition||window.webkitSpeechRecognition;if(!R){asrStatus.textContent='dictation not supported in this browser';return null;}const r=new R();r.lang='en-US';r.continuous=true;r.interimResults=true;r.onresult=e=>{let interim='',final='';for(let i=e.resultIndex;i<e.results.length;i++){const rr=e.results[i];if(rr.isFinal){final+=rr[0].transcript;}else{interim+=rr[0].transcript;}}if(final)inputEl.value+=(inputEl.value?' ':'')+final.trim();asrStatus.textContent=interim?('listening… '+interim):'listening…';};r.onerror=e=>{asrStatus.textContent='asr error: '+(e.error||'unknown');};r.onend=()=>{listening=false;asrStatus.textContent='';};return r;}
+$('#startDict').onclick=()=>{if(listening)return;if(!recognizer)recognizer=initASR();if(!recognizer)return;try{recognizer.start();listening=true;asrStatus.textContent='listening…';}catch(e){asrStatus.textContent='asr failed to start';}};
+$('#stopDict').onclick=()=>{if(!listening)return;try{recognizer&&recognizer.stop();}catch{}};
+
+// ===== ai config & cost
+const CFG_KEY='aiConfig';
+const DEF={provider:'openai',baseUrl:'https://api.openai.com',model:'gpt-4o-mini',apiKey:'',apiVersion:'2024-02-15-preview',temperature:0.2,monthlyCap:15,priceIn:0.15,priceOut:0.60};
+function cfgLoad(){try{return Object.assign({},DEF,JSON.parse(localStorage.getItem(CFG_KEY)||'{}'));}catch{return {...DEF};}}
+function cfgSave(c){localStorage.setItem(CFG_KEY,JSON.stringify(c));}
+const MKEY='costMeter';
+function monthKey(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+function meterLoad(){const raw=localStorage.getItem(MKEY);let m={month:monthKey(),inTok:0,outTok:0};if(raw){try{m=JSON.parse(raw)||m;}catch{}}if(m.month!==monthKey())m={month:monthKey(),inTok:0,outTok:0};return m;}
+function meterSave(m){localStorage.setItem(MKEY,JSON.stringify(m));}
+function chars2tok(s){return Math.ceil((s||'').length/4);} // rough estimate
+function addUsage(i,o){const m=meterLoad();m.inTok+=Math.max(0,Math.floor(i||0));m.outTok+=Math.max(0,Math.floor(o||0));meterSave(m);renderCost();}
+function renderCost(){const cfg=cfgLoad();const m=meterLoad();const dollars=(m.inTok/1e6)*cfg.priceIn+(m.outTok/1e6)*cfg.priceOut;$('#costCapText').textContent=`$${dollars.toFixed(2)} / $${cfg.monthlyCap}`;$('#costDollars').textContent=dollars.toFixed(2);$('#costTokensIn').textContent=m.inTok.toLocaleString();$('#costTokensOut').textContent=m.outTok.toLocaleString();}
+
+// ===== real AI call (OpenAI or Azure OpenAI)
+async function aiChat(cfg,messages){
+  const base=(cfg.baseUrl||'').replace(/\/+$/,'');
+  const inTok=messages.reduce((a,m)=>a+chars2tok(m.content||''),0);
+  let url,headers,body;
+  if((cfg.provider||'openai').toLowerCase()==='azure'){
+    url=`${base}/openai/deployments/${encodeURIComponent(cfg.model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion||'2024-02-15-preview')}`;
+    headers={'Content-Type':'application/json','api-key':cfg.apiKey};
+    body={temperature:cfg.temperature??0.2,messages};
+  } else {
+    url=`${base}/v1/chat/completions`;
+    headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.apiKey}`};
+    body={model:cfg.model||'gpt-4o-mini',temperature:cfg.temperature??0.2,messages};
+  }
+  const resp=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
+  const txt=await resp.text();
+  if(!resp.ok){throw new Error(`api ${resp.status}: ${txt}`);}
+  let data;try{data=JSON.parse(txt);}catch{const m=txt.match(/\{[\s\S]*\}\s*$/);if(m){data=JSON.parse(m[0]);}else{throw new Error('json parse failed');}}
+  const content=data?.choices?.[0]?.message?.content||data?.choices?.[0]?.text||'';
+  addUsage(inTok,chars2tok(content));
+  return content;
+}
+
+// ===== generate (two-pass with preview)
+function coerceConfidence(v){if(typeof v!=='number'||!isFinite(v))return 0.88;return Math.min(0.95,Math.max(0.75,v));}
+
+$('#aiGenerate').onclick=async()=>{
+  const raw=(inputEl.value||'').trim();
+  if(!raw){alert('paste a transcript first');return;}
+  const cfg=cfgLoad();
+  if(!cfg.apiKey){alert('ai settings → paste api key → save');return;}
+
+  try{
+    // pass 1 – extractor
+    const sys1=['you are a careful tcm-intake extractor for an acupuncture clinic.','read ONLY the provided transcript and return STRICT JSON with facts (no prose).','json keys: hpi_bits[], muscles[], rom[], muscle_tests[], personal_context[], tcm_clues[], points_mentioned[], icd_candidates[], herb_candidates[], clinically_relevant[], qa_pairs[]','use lowercase for prose; laterality r/l/b only.'].join('\n');
+    const c1=await aiChat(cfg,[{role:'system',content:sys1},{role:'user',content:raw}]);
+    let ext; try{ext=JSON.parse(c1);}catch{const m=c1.match(/\{[\s\S]*\}\s*$/); if(m){ext=JSON.parse(m[0]);} else {throw new Error('pass‑1 returned non‑json');}}
+    p1Text.value=JSON.stringify(ext,null,2); p1Wrap.classList.remove('hidden');
+
+    // pass 2 – scribe
+    const sys2=['you are a tcm-savvy clinical scribe for an acupuncture practice.','use ALL extracted facts to write ONE consolidated note matching this schema:','{',
+      ' "hpi":"string",',
+      ' "subjective": {"sections":[{"header":"string","bullets":["string"]}]},',
+      ' "objective":  {"sections":[{"header":"string","bullets":["string"]}]},',
+      ' "personal_context":["string"],',
+      ' "tongue":"string","pulse":"string",',
+      ' "assessment":{"bullets":["string"],"tcm_dx":["string"]},',
+      ' "treatment_principle":["string"],',
+      ' "acupuncture_plan":{"channels":"string","points_used":["string"],"interventions":["string"],"adjuncts":["string"]},',
+      ' "herb_formulas":["string"],',
+      ' "advice":["string"],',
+      ' "icd10":["string"],',
+      ' "confidence":0.82,',
+      ' "assumptions":["string"]',
+      '}','hard rules: laterality R/L/B only; channels/points UPPERCASE; if tongue/pulse missing, deduce and label as deduced; herbs required (1–2 patent); icd10 3–4 codes; confidence 0.75–0.95.'].join('\n');
+    const c2=await aiChat(cfg,[{role:'system',content:sys2},{role:'user',content:JSON.stringify({extracts:[ext]})}]);
+    let final; try{final=JSON.parse(c2);}catch{const m=c2.match(/\{[\s\S]*\}\s*$/); if(m){final=JSON.parse(m[0]);} else {throw new Error('pass‑2 returned non‑json');}}
+
+    // sanitize
+    const fixSections=sec=>{ if(!sec||!sec.sections) return sec; sec.sections=sec.sections.map(s=>({header:canon(s.header||''), bullets:(s.bullets||[]).map(b=>ensureMuscleQuality(canon(b)))})); return sec; };
+    if(final.hpi) final.hpi=canon(final.hpi);
+    final.subjective=fixSections(final.subjective);
+    final.objective=fixSections(final.objective);
+    if(final.tongue) final.tongue=canon(final.tongue);
+    if(final.pulse) final.pulse=canon(final.pulse);
+    if(final.assessment){ final.assessment.bullets=(final.assessment.bullets||[]).map(b=>canon(b)); final.assessment.tcm_dx=(final.assessment.tcm_dx||[]).map(b=>canon(b)); }
+    final.treatment_principle=(final.treatment_principle||[]).map(b=>canon(b));
+    if(final.acupuncture_plan){
+      final.acupuncture_plan.channels=canon(final.acupuncture_plan.channels||'');
+      final.acupuncture_plan.points_used=(final.acupuncture_plan.points_used||[]).map(b=>canon(b));
+      final.acupuncture_plan.interventions=(final.acupuncture_plan.interventions||[]).map(b=>canon(b));
+      const allow=/\bmoxa|moxibustion|ai ye\b/i.test(raw||'');
+      if(final.acupuncture_plan.adjuncts){ final.acupuncture_plan.adjuncts=final.acupuncture_plan.adjuncts.filter(x=> allow || !/moxa|moxibustion|ai ye/i.test(x)); final.acupuncture_plan.adjuncts=(final.acupuncture_plan.adjuncts||[]).map(b=>canon(b)); }
+    }
+    final.herb_formulas=(final.herb_formulas||[]).map(x=>canon((x||'').replace(/[\u0080-\uFFFF]/g,'')));
+    final.advice=(final.advice||[]).map(b=>canon(b));
+    final.icd10=(final.icd10||[]).map(x=>icdPretty(x.toUpperCase?x.toUpperCase():x));
+    final.confidence=coerceConfidence(final.confidence);
+
+    // compose note
+    function bullets(a){return (a||[]).map(s=>'– '+(s||'')).join('\n');}
+    function sections(sec){ if(!sec||!sec.sections) return ''; return sec.sections.map(s=>{ const h=s.header||''; const b=bullets(s.bullets||[]); return h+(b?'\n'+b:''); }).join('\n'); }
+    const hpi='hpi:\n– '+(final.hpi||'follow‑up for pain and mobility concerns');
+    const subj='subjective:\n'+(sections(final.subjective)||'general\n– no specific subjective items captured');
+    const obj='objective:\n'+(sections(final.objective)||'');
+    const tongue='tongue:\n'+(final.tongue||'deduced: not specified');
+    const pulse='pulse:\n'+(final.pulse||'deduced: not specified');
+    const assess='assessment (including tcm diagnosis):\n'+bullets((final.assessment?.bullets||[]));
+    const tcmdx='tcm diagnosis:\n'+bullets((final.assessment?.tcm_dx||[]));
+    const principle='treatment principle:\n'+bullets((final.treatment_principle||[]));
+    const plan=(()=>{ const ch=(final.acupuncture_plan?.channels||'lv, sp, gb, bl, st as indicated; local ashi'); const pts=(final.acupuncture_plan?.points_used||[]).join(', '); const ints=bullets((final.acupuncture_plan?.interventions||[])); const adj=bullets((final.acupuncture_plan?.adjuncts||[])); return ['acupuncture plan:','acupuncture','– channels: '+ch,'– points used: '+(pts||'as clinically indicated'),ints?ints:'','adjunct therapies',adj?adj:''].filter(Boolean).join('\n');})();
+    const herbs='herbal recommendations (patent formulas):\n'+bullets((final.herb_formulas||[]));
+    const icd=(final.icd10&&final.icd10.length)?('icd-10 codes:\n'+bullets((final.icd10||[]))):'';
+    const note=[hpi,'',subj,'',obj,'',tongue,'',pulse,'',assess,'',tcmdx,'',principle,'',plan,'',herbs,'',icd,'','confidence & assumptions:\n– confidence: '+(final.confidence||0.88).toFixed(2)].join('\n');
+
+    outputEl.value=note; localStorage.setItem('lastNote',note);
+
+  }catch(e){ alert('generation error: '+(e?.message||e)); }
+};
+
+// ===== presets
+const modules={"stress":"general\n– increased stress\n– emotional tension","sleep":"general\n– difficulty falling asleep or staying asleep"};
+const combos={"LV3 + LI4":"LV3, LI4","ST36 + SP6":"ST36, SP6","GB34 + GB41":"GB34, GB41"};
+const herbs={"jia wei xiao yao wan":"stress/irritability with heat signs","xiao yao wan":"lv qi stagnation with sp deficiency","du huo ji sheng wan":"chronic wind-cold-damp bi with deficiency"};
+const icdFav=["M54.2 cervicalgia","M79.18 other myalgia (myofascial pain)","M54.50 low back pain, unspecified","G47.00 insomnia, unspecified"];
+(function build(){const mb=$('#moduleButtons'),md=$('#moduleDropdown');for(const k in modules){const b=document.createElement('button');b.className='btn btn-accent';b.textContent=k;b.onclick=()=>{inputEl.value+=(inputEl.value?'\n':'')+modules[k];};mb.appendChild(b);const o=document.createElement('option');o.value=k;o.textContent=k;md.appendChild(o);}$('#insertModule').onclick=()=>{inputEl.value+=(inputEl.value?'\n':'')+modules[md.value];};const cb=document.getElementById('comboButtons'),cd=$('#comboDropdown');for(const k in combos){const b=document.createElement('button');b.className='btn btn-accent';b.textContent=k;b.onclick=()=>{inputEl.value+=(inputEl.value?' ':'')+combos[k];};cb.appendChild(b);const o=document.createElement('option');o.value=k;o.textContent=k;cd.appendChild(o);}$('#insertCombo').onclick=()=>{inputEl.value+=(inputEl.value?' ':'')+combos[cd.value];};const hb=document.getElementById('herbButtons'),hd=$('#herbDropdown');for(const n in herbs){const b=document.createElement('button');b.className='btn btn-accent';b.textContent=n;b.onclick=()=>{inputEl.value+=` herbal: ${n}${herbs[n]?" ("+herbs[n]+")":""}`;};hb.appendChild(b);const o=document.createElement('option');o.value=n;o.textContent=n;hd.appendChild(o);}$('#insertHerb').onclick=()=>{const n=hd.value;inputEl.value+=` herbal: ${n}${herbs[n]?" ("+herbs[n]+")":""}`;};const id=$('#icdDropdown');icdFav.forEach(code=>{const o=document.createElement('option');o.value=code;o.textContent=code;id.appendChild(o);});$('#addICD').onclick=()=>{const m=(id.value.match(/[A-Z][0-9][0-9A-Z]\.[0-9A-Z]{1,4}/i)||[])[0];if(!m)return;outputEl.value+=(outputEl.value.trim()?"\n":"")+`icd-10: ${icdPretty(m)}`;};})();
+
+// ===== ai settings modal
+$('#aiSettingsBtn').onclick=()=>{const c=cfgLoad();const m=document.createElement('div');m.className='card';m.style.position='fixed';m.style.inset='16px';m.style.zIndex=9999;m.style.background='#fff';m.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-weight:700;color:var(--accent)">ai settings</div><button id=\"x\" class=\"btn btn-grey\">close</button></div><div style=\"display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px\"><label>provider<select id=\"p\"><option value=\"openai\">openai</option><option value=\"azure\">azure openai</option></select></label><label>model/deployment<input id=\"m\" type=\"text\" placeholder=\"gpt-4o-mini or your deployment\"></label><label>api key<input id=\"k\" type=\"text\" placeholder=\"paste key\"></label><label>base url<input id=\"u\" type=\"text\" placeholder=\"https://api.openai.com or your azure url\"></label><label>azure api version<input id=\"v\" type=\"text\" placeholder=\"2024-02-15-preview\"></label><label>temperature<input id=\"t\" type=\"number\" min=\"0\" max=\"1\" step=\"0.1\" value=\"0.2\"></label><label>monthly cap ($)<input id=\"cap\" type=\"number\" min=\"0\" step=\"1\" value=\"15\"></label><label>price in ($/1M tok)<input id=\"pi\" type=\"number\" min=\"0\" step=\"0.01\" value=\"0.15\"></label><label>price out ($/1M tok)<input id=\"po\" type=\"number\" min=\"0\" step=\"0.01\" value=\"0.60\"></label></div><div class=\"row\" style=\"margin-top:8px\"><button id=\"saveCfg\" class=\"btn btn-green\">save</button></div>`;document.body.appendChild(m);m.querySelector('#p').value=c.provider;m.querySelector('#m').value=c.model;m.querySelector('#k').value=c.apiKey;m.querySelector('#u').value=c.baseUrl;m.querySelector('#v').value=c.apiVersion;m.querySelector('#t').value=c.temperature;m.querySelector('#cap').value=c.monthlyCap;m.querySelector('#pi').value=c.priceIn;m.querySelector('#po').value=c.priceOut;m.querySelector('#x').onclick=()=>m.remove();m.querySelector('#saveCfg').onclick=()=>{const c2={provider:m.querySelector('#p').value,model:(m.querySelector('#m').value||'').trim()||'gpt-4o-mini',apiKey:(m.querySelector('#k').value||'').trim(),baseUrl:(m.querySelector('#u').value||'').trim()||'https://api.openai.com',apiVersion:(m.querySelector('#v').value||'').trim()||'2024-02-15-preview',temperature:parseFloat(m.querySelector('#t').value)||0.2,monthlyCap:Math.max(0,parseFloat(m.querySelector('#cap').value)||15),priceIn:Math.max(0,parseFloat(m.querySelector('#pi').value)||0.15),priceOut:Math.max(0,parseFloat(m.querySelector('#po').value)||0.60)};cfgSave(c2);m.remove();};};
+</script>
+</body>
+</html>
