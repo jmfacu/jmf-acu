@@ -165,7 +165,8 @@ document.getElementById('aiTest').onclick=async()=>{const c=loadAIConfig();if(!c
 
 // normalizers
 function normalizeLateralityText(s){if(!s)return s;s=s.replace(/bilateral|both/gi,'B').replace(/left/gi,'L').replace(/right/gi,'R').replace(/rt/gi,'R').replace(/lt/gi,'L');s=s.replace(/\(?([rlb])\)?(?=\s|:|;|,|\/|-|\)|$)/gi,(_m,g1)=>g1.toUpperCase());s=s.replace(/(^|[
-])\s*[–\-•]\s*([rlb])(?=\s|:)/gi,(_m,lead,side)=>`${lead}– ${side.toUpperCase()}`);return s;}
+
+])\s*[–\-•]\s*([rlb])(?=\s|:)/gi,(_m,lead,side)=>`${lead}– ${side.toUpperCase()}`);return s;}
 function uppercaseMeridians(s){if(!s)return s;['lv','sp','gb','bl','st','lu','li','si','ht','pc','kd','cv','gv'].forEach(m=>{const r1=new RegExp(`\b${m}\b`,'gi');s=s.replace(r1,m.toUpperCase());const r2=new RegExp(`\b${m}\s?(\d+)`,'gi');s=s.replace(r2,(_a,n)=>`${m.toUpperCase()}${n}`);});s=s.replace(/yin\s?tang/gi,'yintang');return s;}
 const norm=s=>uppercaseMeridians(normalizeLateralityText(s||''));
 
@@ -176,7 +177,8 @@ function gleanFromRaw(text){
   const res={points:[],personal:[],contextPairs:[],extraHPI:[],activities:new Set(),aggravators:new Set(),qualities:new Set(),adjunctsUsed:new Set(),issueContexts:[]};
   let m; const ptRe=/(lv|sp|gb|bl|st|lu|li|si|ht|pc|kd|cv|gv)\s?(\d{1,2})|y[ i]?n\s?tang/gi; while((m=ptRe.exec(t))!==null){ if(/y[ i]?n\s?tang/.test(m[0])){ if(!res.points.includes('yintang')) res.points.push('yintang'); } else { const full=`${m[1].toUpperCase()}${m[2]}`; if(!res.points.includes(full)) res.points.push(full); } }
   let p; const pairRe=/([a-z ]{2,20})\s*:\s*([^.;
-]+)/gi; while((p=pairRe.exec(t))!==null){ const k=(p[1]||'').trim(); const v=(p[2]||'').trim(); if(!k) continue; const kv=`${k}: ${v}`; if(!res.contextPairs.includes(kv)) res.contextPairs.push(kv); }
+
+]+)/gi; while((p=pairRe.exec(t))!==null){ const k=(p[1]||'').trim(); const v=(p[2]||'').trim(); if(!k) continue; const kv=`${k}: ${v}`; if(!res.contextPairs.includes(kv)) res.contextPairs.push(kv); }
   const cold=last(t,[/likes?\s+(cold|iced)\s+water/g,/(prefers|drinks)\s+(cold|iced)\s+water/g,/thirst:\s*.*cold/g]);
   const warm=last(t,[/likes?\s+(hot|warm)\s+water/g,/(prefers|drinks)\s+(hot|warm)\s+water/g,/thirst:\s*.*(hot|warm)/g]);
   if(cold>=0||warm>=0){ res.personal.push(cold>warm?'prefers cold water':'prefers warm water'); }
