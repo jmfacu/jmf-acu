@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>jmf acu</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="jmf acu" />
+<meta name="theme-color" content="#4F3D5C" />
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=r2c-cost" />
+<style>
+:root{--bg:#fff;--text:#444;--muted:#666;--card-bg:#fff;--border:#e5e7eb;--accent:#4F3D5C;--accent-text:#fff;--accent-green:#BADA55;--secondary:#666;--danger:#4F3D5C;--radius:12px}
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,Segoe UI,Helvetica,Arial}
+.container{padding:16px;max-width:1100px;margin:0 auto}
+.header{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
+h1{margin:0 0 6px;font:400 28px system-ui;text-transform:lowercase}
+.section-title{font:600 20px system-ui;margin-top:20px;color:var(--accent);text-transform:lowercase}
+.notice{font-size:12px;color:var(--muted);margin-top:6px}
+textarea,input,select{width:100%;padding:10px;font-size:16px;background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:var(--radius)}
+textarea.output-box{height:420px;white-space:pre-wrap}
+.flex-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{padding:12px 16px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;text-transform:lowercase;letter-spacing:.2px;cursor:pointer}
+button.secondary{background:var(--secondary)} button.danger{background:var(--danger)} .small-btn{padding:6px 10px;font-size:14px;background:var(--accent-green);color:#0b1324;border-radius:12px}
+.preview{margin-top:12px;padding:12px;border:1px solid var(--border);border-radius:12px;background:#fdfdfd}
+.preview textarea{height:160px;white-space:pre-wrap}
+.modal-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;padding:16px}
+.modal{width:100%;max-width:720px;background:var(--card-bg);color:var(--text);border:1px solid var(--border);border-radius:16px;padding:16px}
+.progress-bar{height:10px;background:#eee;border-radius:999px;overflow:hidden;margin:8px 0 12px}
+.progress-bar>div{height:100%;width:0;background:#BADA55;transition:width .25s ease}
+.log{max-height:140px;overflow:auto;background:#fafafa;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:13px}
+.card{background:#fafafa;border:1px solid var(--border);border-radius:12px;padding:10px 12px}
+.badge{padding:2px 8px;border-radius:999px;background:#f1f5f9;border:1px solid #e2e8f0;color:#475569;margin-right:6px}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div style="display:flex;gap:12px;align-items:center">
+      <div style="width:84px;height:84px;background:#4F3D5C;color:#fff;border-radius:18px;display:flex;align-items:center;justify-content:center;font:600 22px system-ui;flex-direction:column;line-height:1.05"><span>jmf</span><span>acu</span></div>
+      <div>
+        <h1>jmf acu <span style="font:400 12px system-ui;color:#999">• r2c (tools toggle + cost meter)</span></h1>
+        <div class="notice">universal context capture • two‑pass with fallback • L/R/B + LV/KD/GB • default confidence 0.88</div>
+        <div class="flex-row" style="margin-top:6px">
+          <button id="aiSettingsBtn" class="small-btn">ai settings</button>
+          <button id="toggleTheme" class="secondary small">toggle</button>
+          <button id="toggleTools" class="secondary small">show tools</button>
+          <button id="toggleCost" class="secondary small">show cost</button>
+        </div>
+      </div>
+    </div>
+    <div id="costCard" class="card" style="display:none;min-width:280px;max-width:420px">
+      <div style="display:flex;align-items:center;justify-content:space-between;">
+        <div style="font-size:14px;font-weight:600;color:#4F3D5C">estimated cost (this month)</div>
+        <div id="costCapText" class="notice">$0 / $15</div>
+      </div>
+      <div class="progress-bar"><div id="costBarFill"></div></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span id="costDollars"   class="badge">$0.00</span>
+        <span id="costTokensIn"  class="badge">in: 0 tok</span>
+        <span id="costTokensOut" class="badge">out: 0 tok</span>
+      </div>
+      <div id="costNote" class="notice" style="margin-top:6px">pricing used: $0.15/1m input, $0.60/1m output (change in ai settings).</div>
+    </div>
+  </div>
+
+  <div class="section-title">transcript input</div>
+  <textarea id="inputText" placeholder="paste transcript (60–90 min ok)…"></textarea>
+  <div class="flex-row">
+    <button id="startMic">🎤 start dictation</button>
+    <button id="stopMic" class="secondary">stop dictation</button>
+    <button id="clearInput" class="danger">clear input</button>
+    <button id="pasteDemo" class="small-btn">paste test text</button>
+  </div>
+
+  <div class="section-title">ai generation (two‑pass with fallback)</div>
+  <div class="flex-row">
+    <button id="aiGenerate">ai generate note</button>
+    <button id="duplicateLast" class="secondary">duplicate last</button>
+  </div>
+  <div class="notice">pass‑1 extracts facts; pass‑2 drafts; if pass‑2 is thin, we compose from pass‑1 + your raw text (no detail loss).</div>
+
+  <div id="toolsPanel" style="display:none; margin-top:10px; padding:12px; border:1px solid #e5e7eb; border-radius:12px; background:#f8fafc">
+    <div class="section-title">quick modules</div>
+    <div id="moduleButtons"></div>
+    <div class="flex-row">
+      <select id="moduleDropdown"></select>
+      <button id="insertModule" class="small-btn">insert</button>
+    </div>
+
+    <div class="section-title">acupuncture point combos</div>
+    <div id="comboButtons"></div>
+    <div class="flex-row">
+      <select id="comboDropdown"></select>
+      <button id="insertCombo" class="small-btn">insert</button>
+    </div>
+
+    <div class="section-title">herbal recommendations (patent formulas)</div>
+    <div id="herbButtons"></div>
+    <div class="flex-row">
+      <select id="herbDropdown"></select>
+      <button id="insertHerb" class="small-btn">add formula</button>
+    </div>
+
+    <div class="section-title">icd-10 favorites</div>
+    <div class="flex-row">
+      <select id="icdDropdown"></select>
+      <button id="addICD" class="small-btn">add to output</button>
+    </div>
+  </div>
+
+  <div class="preview" id="pass1Preview" style="display:none;">
+    <h3 style="margin:0 0 8px;color:#4F3D5C">ai summary preview (from pass 1)</h3>
+    <div class="notice">fast outline of captured items.</div>
+    <textarea id="pass1Text" readonly></textarea>
+  </div>
+
+  <div class="section-title">output note</div>
+  <textarea id="outputText" class="output-box" placeholder="your formatted note will appear here…"></textarea>
+  <div class="flex-row">
+    <button id="copyNote">copy to clipboard</button>
+    <button id="clearOutput" class="danger">clear output</button>
+    <button id="clearAll" class="danger">clear all</button>
+  </div>
+
+  <hr>
+  <div class="notice">tip: use a fresh token when you update (e.g., <code>?v=r2c-cost</code>) and re‑add to home screen.</div>
+</div>
+
+<div id="tpModal" class="modal-backdrop"><div class="modal"><h2>generating note (two‑pass)</h2><div id="tpStep" class="notice">preparing…</div><div class="progress-bar"><div id="tpProg"></div></div><div class="log" id="tpLog"></div><div style="text-align:right;margin-top:10px;"><button id="tpClose" class="secondary small">close</button></div></div></div>
+
+<div id="aiModalBackdrop" class="modal-backdrop">
+  <div class="modal">
+    <h2>ai settings</h2>
+    <p class="notice">key is stored locally on this device. test before use.</p>
+    <div class="grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;">
+      <div><label>provider</label><select id="aiProvider"><option value="openai">openai (api.openai.com)</option><option value="azure">azure openai</option></select></div>
+      <div><label>model / deployment</label><input id="aiModel" type="text" placeholder="openai: gpt-4o-mini  |  azure: your-deployment-name"></div>
+      <div><label>api key</label><input id="aiKey" type="text" placeholder="paste your api key"></div>
+      <div><label>base url</label><input id="aiBaseUrl" type="text" placeholder="openai: https://api.openai.com  |  azure: https://YOUR-RESOURCE.openai.azure.com"></div>
+      <div><label>azure api version (if azure)</label><input id="aiApiVersion" type="text" placeholder="e.g., 2024-02-15-preview"></div>
+      <div><label>temperature</label><input id="aiTemp" type="number" min="0" max="1" step="0.1" value="0.2"></div>
+      <div><label>monthly cap ($)</label><input id="aiCap" type="number" min="0" step="1" value="15"></div>
+      <div><label>price — input ($ / 1M tokens)</label><input id="aiPriceIn" type="number" min="0" step="0.01" value="0.15"></div>
+      <div><label>price — output ($ / 1M tokens)</label><input id="aiPriceOut" type="number" min="0" step="0.01" value="0.60"></div>
+    </div>
+    <div class="flex-row" style="justify-content:space-between;margin-top:12px;"><span class="notice">keep a hard cap in your openai dashboard.</span><div class="flex-row" style="gap:6px;"><button id="aiTest" class="small-btn">test ai</button><button id="aiSave" class="small-btn">save</button><button id="aiClose" class="secondary small">close</button></div></div>
+  </div>
+</div>
+
+<script>
+const inputEl=document.getElementById('inputText');
+const outputEl=document.getElementById('outputText');
+const p1WrapEl=document.getElementById('pass1Preview');
+const p1TextEl=document.getElementById('pass1Text');
+
+document.getElementById('toggleTheme').onclick=()=>document.body.classList.toggle('dark');
+document.getElementById('toggleTools').onclick=()=>{const p=document.getElementById('toolsPanel');const vis=p.style.display!=='none';p.style.display=vis?'none':'block';document.getElementById('toggleTools').textContent=vis?'show tools':'hide tools';};
+document.getElementById('toggleCost').onclick=()=>{const c=document.getElementById('costCard');const vis=c.style.display!=='none';c.style.display=vis?'none':'block';document.getElementById('toggleCost').textContent=vis?'show cost':'hide cost';};
+
+// mic (optional)
+let recognition,autoRestartMic=false; if('webkitSpeechRecognition'in window){recognition=new webkitSpeechRecognition();recognition.continuous=true;recognition.interimResults=true;recognition.onresult=e=>{let s="";for(let i=e.resultIndex;i<e.results.length;i++){if(e.results[i].isFinal)s+=e.results[i][0].transcript;}if(s.trim()!==''){inputEl.value+=(inputEl.value?' ':'')+s.toLowerCase();}};recognition.onend=()=>{if(autoRestartMic)recognition.start();};}
+document.getElementById('startMic').onclick=()=>{if(recognition){autoRestartMic=true;recognition.start();}else{alert('speech not available in this browser.')}};
+document.getElementById('stopMic').onclick =()=>{if(recognition){autoRestartMic=false;recognition.stop();}};
+
+// clear / copy
+document.getElementById('clearInput').onclick =()=>{inputEl.value='';p1TextEl.value='';p1WrapEl.style.display='none';};
+document.getElementById('copyNote').onclick  =()=>{outputEl.focus();outputEl.select();try{document.execCommand('copy');}catch{navigator.clipboard.writeText(outputEl.value);}};
+document.getElementById('clearOutput').onclick=()=>{outputEl.value='';p1TextEl.value='';p1WrapEl.style.display='none';};
+document.getElementById('clearAll').onclick   =()=>{inputEl.value='';outputEl.value='';p1TextEl.value='';p1WrapEl.style.display='none';localStorage.removeItem('lastNote');window.__extListForICD=null;};
+document.getElementById('pasteDemo').onclick  =()=>{inputEl.value='l hamstring tight dull after running; worse with stairs and hip flexion. prefers warm water. swims 2x/week, runs 10–15 miles/week. infrared used post-acu. bowel: loose 2x/day; sleep: wakes 3am; urine: dark, frequent.'};
+
+// ai settings + cost meter
+const aiDefaults={provider:'openai',baseUrl:'https://api.openai.com',model:'gpt-4o-mini',apiKey:'',apiVersion:'2024-02-15-preview',temperature:0.2,monthlyCap:15,priceIn:0.15,priceOut:0.60};
+function loadAIConfig(){try{return Object.assign({},aiDefaults,JSON.parse(localStorage.getItem('aiConfig')||'{}'));}catch{return {...aiDefaults};}}
+function saveAIConfig(c){localStorage.setItem('aiConfig',JSON.stringify(c));renderCostUI();}
+const aiModal=document.getElementById('aiModalBackdrop');
+document.getElementById('aiSettingsBtn').onclick=()=>{const c=loadAIConfig();document.getElementById('aiProvider').value=c.provider;document.getElementById('aiBaseUrl').value=c.baseUrl;document.getElementById('aiModel').value=c.model;document.getElementById('aiKey').value=c.apiKey;document.getElementById('aiApiVersion').value=c.apiVersion;document.getElementById('aiTemp').value=c.temperature;document.getElementById('aiCap').value=c.monthlyCap;document.getElementById('aiPriceIn').value=c.priceIn;document.getElementById('aiPriceOut').value=c.priceOut;aiModal.style.display='flex';};
+document.getElementById('aiClose').onclick=()=>aiModal.style.display='none';
+document.getElementById('aiSave').onclick=()=>{const c={provider:document.getElementById('aiProvider').value,baseUrl:(document.getElementById('aiBaseUrl').value||'').trim()||aiDefaults.baseUrl,model:(document.getElementById('aiModel').value||'').trim()||aiDefaults.model,apiKey:(document.getElementById('aiKey').value||'').trim(),apiVersion:(document.getElementById('aiApiVersion').value||'').trim()||aiDefaults.apiVersion,temperature:parseFloat(document.getElementById('aiTemp').value)||aiDefaults.temperature,monthlyCap:Math.max(0,parseFloat(document.getElementById('aiCap').value)||aiDefaults.monthlyCap),priceIn:Math.max(0,parseFloat(document.getElementById('aiPriceIn').value)||aiDefaults.priceIn),priceOut:Math.max(0,parseFloat(document.getElementById('aiPriceOut').value)||aiDefaults.priceOut)};saveAIConfig(c);aiModal.style.display='none';};
+document.getElementById('aiTest').onclick=async()=>{const cfg=loadAIConfig();if(!cfg.apiKey){alert('paste your api key first.');return;}try{await aiChat(cfg,[{role:'system',content:'reply with {"ok":true} only (json).'},{role:'user',content:'ping'}]);alert('ai test ok.');}catch(e){alert('ai test failed: '+(e?.message||e));}}
+
+const METER_KEY='costMeter';
+function monthKeyNow(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;}
+function loadMeter(){const raw=localStorage.getItem(METER_KEY);const mk=monthKeyNow();let obj={month:mk,inTok:0,outTok:0};if(raw){try{obj=JSON.parse(raw)||obj;}catch{}}if(obj.month!==mk)obj={month:mk,inTok:0,outTok:0};return obj;}
+function saveMeter(obj){localStorage.setItem(METER_KEY,JSON.stringify(obj));}
+function charsToTokens(s){if(!s)return 0;return Math.ceil(s.length/4);} // rough heuristic
+function estimateMessagesTokens(msgs){let t=0;(msgs||[]).forEach(m=>t+=charsToTokens(m?.content||''));return t;}
+function addToMeter(inTok,outTok){const m=loadMeter();m.inTok+=Math.max(0,Math.floor(inTok||0));m.outTok+=Math.max(0,Math.floor(outTok||0));saveMeter(m);renderCostUI();}
+function currentCost(){const cfg=loadAIConfig();const m=loadMeter();const dollars=(m.inTok/1e6)*cfg.priceIn+(m.outTok/1e6)*cfg.priceOut;return{dollars,inTok:m.inTok,outTok:m.outTok,cap:cfg.monthlyCap,priceIn:cfg.priceIn,priceOut:cfg.priceOut};}
+function renderCostUI(){const {dollars,inTok,outTok,cap,priceIn,priceOut}=currentCost();const capEl=document.getElementById('costCapText');if(!capEl)return;capEl.textContent=`$${dollars.toFixed(2)} / $${cap.toFixed(0)}`;const pct=cap>0?Math.min(100,Math.round((dollars/cap)*100)):0;const bar=document.getElementById('costBarFill');bar.style.width=pct+'%';bar.style.background=(pct>=100)?'#E35D5D':(pct>=80?'#E3B75D':'#BADA55');document.getElementById('costDollars').textContent=`$${dollars.toFixed(2)}`;document.getElementById('costTokensIn').textContent=`in: ${inTok.toLocaleString()} tok`;document.getElementById('costTokensOut').textContent=`out: ${outTok.toLocaleString()} tok`;document.getElementById('costNote').textContent=`pricing used: $${priceIn}/1m input, $${priceOut}/1m output (change in ai settings).`;}
+renderCostUI();
+
+async function aiChat(cfg,messages){
+  const base=(cfg.baseUrl||'https://api.openai.com').replace(/\/+$/,'');
+  const inTok=estimateMessagesTokens(messages);
+  let url,headers,body; if(cfg.provider==='azure'){ url=`${base}/openai/deployments/${encodeURIComponent(cfg.model)}/chat/completions?api-version=${encodeURIComponent(cfg.apiVersion)}`; headers={'Content-Type':'application/json','api-key':cfg.apiKey}; body={temperature:cfg.temperature??0.2,response_format:{type:'json_object'},messages}; } else { url=`${base}/v1/chat/completions`; headers={'Content-Type':'application/json','Authorization':`Bearer ${cfg.apiKey}`}; body={model:cfg.model||'gpt-4o-mini',temperature:cfg.temperature??0.2,response_format:{type:'json_object'},messages}; }
+  const resp=await fetch(url,{method:'POST',headers,body:JSON.stringify(body)});
+  const text=await resp.text();
+  if(!resp.ok){ throw new Error(`api ${resp.status}: ${text}`); }
+  try{ const data=JSON.parse(text); const content=data?.choices?.[0]?.message?.content||data?.choices?.[0]?.text||''; const outTok=charsToTokens(content); addToMeter(inTok,outTok); return content; }catch{ addToMeter(inTok,charsToTokens(text)); return text; }
+}
+
+function deduceTonguePulseFromClues(extList,glean){ const all=JSON.stringify(extList||[]).toLowerCase(); const clues=new Set(); if(/lv qi stagnation/.test(all)) clues.add('lv qi stagnation'); if(/blood stasis/.test(all)) clues.add('blood stasis'); if(/damp/.test(all)) clues add('damp'); if(/heat/.test(all)) clues add('heat'); if(/cold/.test(all)) clues add('cold'); if(/yin def|yin deficiency/.test(all)) clues add('yin deficiency'); if(/yang def|yang deficiency/.test(all)) clues add('yang deficiency'); const personal=(glean?.personal||[]).join(' ').toLowerCase(); if(/prefers cold water/.test(personal)) clues add('heat tendency'); if(/prefers warm water/.test(personal)) clues add('cold tendency'); const tp={tongue:'deduced: not specified',pulse:'deduced: not specified'}; const setT=d=>tp.tongue='deduced: '+d, setP=d=>tp.pulse='deduced: '+d; if(clues.has('lv qi stagnation')) setP('wiry (esp. LV positions)'); if(clues.has('blood stasis')) setP(tp.pulse.includes('not specified')?'choppy':'choppy; plus prior'); if(clues.has('damp')) setP(tp.pulse.includes('not specified')?'slippery':tp.pulse+'; slippery'); if(clues.has('heat')||clues.has('yin deficiency')||/heat tendency/.test([...clues].join(' '))){ setT('red or slightly dry'); setP(tp.pulse.includes('not specified')?'rapid or thin':tp.pulse+'; rapid/thin'); } if(clues.has('cold')||clues.has('yang deficiency')||/cold tendency/.test([...clues].join(' '))){ setT(tp.tongue.includes('not specified')?'pale':tp.tongue+'; pale'); setP(tp.pulse.includes('not specified')?'tight or slow':tp.pulse+'; tight/slow'); } return tp; }
+function coerceConfidence(v){ if(typeof v!=='number'||!isFinite(v)) return 0.88; if(v<0.75) return 0.88; if(v>0.95) return 0.95; return v; }
+function herbFallbackFromTCM(arr){ try{ const txt=(arr||[]).join('; ').toLowerCase(); const picks=[]; const push=x=>{ if(x && !picks.includes(x)) picks.push(x) }; if(/lv qi stagnation|liver qi/.test(txt)){ push('xiao yao wan'); if(/heat|irrit/.test(txt)) push('jia wei xiao yao wan'); } if(/blood stasis/.test(txt)) push('shen tong zhu yu wan'); if(/wind|cold|damp/.test(txt)&&/bi/.test(txt)){ push('du huo ji sheng wan'); push('juan bi wan'); } if(!picks length) push('shen tong zhu yu wan'); return picks.slice(0,2); }catch{return ['shen tong zhu yu wan'];} }
+</script>
+</body>
+</html>
